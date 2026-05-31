@@ -56,9 +56,19 @@ router.put('/', auth, async (req, res) => {
 router.post('/picture', auth, upload.single('picture'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'Tidak ada file yang diunggah' });
-    const pictureUrl = process.env.VERCEL
-      ? `/tmp/${req.file.filename}`
-      : `/uploads/profiles/${req.file.filename}`;
+
+    let pictureUrl;
+
+    if (process.env.VERCEL) {
+      // Vercel: no persistent filesystem — convert to base64 data URL, store in MongoDB
+      const fs = require('fs');
+      const buf = fs.readFileSync(req.file.path);
+      pictureUrl = `data:${req.file.mimetype};base64,${buf.toString('base64')}`;
+      try { fs.unlinkSync(req.file.path); } catch (_) {}
+    } else {
+      pictureUrl = `/uploads/profiles/${req.file.filename}`;
+    }
+
     const user = await User.findByIdAndUpdate(
       req.user._id, { profilePicture: pictureUrl }, { new: true }
     ).select('-password');

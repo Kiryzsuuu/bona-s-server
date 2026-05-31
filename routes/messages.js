@@ -119,7 +119,11 @@ router.post('/send', auth, mediaUpload.single('media'), async (req, res) => {
     if (req.file) {
       const mt = req.file.mimetype;
       if (process.env.VERCEL) {
-        mediaUrl = `/tmp/${req.file.filename}`;
+        // Vercel: no persistent filesystem — encode to base64 data URL
+        const fs = require('fs');
+        const buf = fs.readFileSync(req.file.path);
+        mediaUrl = `data:${mt};base64,${buf.toString('base64')}`;
+        try { fs.unlinkSync(req.file.path); } catch (_) {}
       } else {
         const folder = mt.startsWith('image/') ? 'images'
           : mt.startsWith('audio/') ? 'voices'
