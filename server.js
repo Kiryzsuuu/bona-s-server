@@ -16,6 +16,7 @@ const profileRoutes = require('./routes/profile');
 const messageRoutes = require('./routes/messages');
 const userRoutes = require('./routes/users');
 const pushRoutes = require('./routes/push');
+const groupRoutes = require('./routes/groups');
 
 const app = express();
 const server = http.createServer(app);
@@ -44,6 +45,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/push', pushRoutes);
+app.use('/api/groups', groupRoutes);
 
 // Socket.IO real-time
 const connectedUsers = new Map();
@@ -60,6 +62,11 @@ io.on('connection', async (socket) => {
   try {
     const User = require('./models/User');
     await User.findByIdAndUpdate(userId, { onlineStatus: 'online', lastSeen: new Date() });
+
+    // Auto-join all group rooms this user belongs to
+    const Group = require('./models/Group');
+    const groups = await Group.find({ 'members.user': userId }, '_id');
+    groups.forEach(g => socket.join(`group:${g._id}`));
   } catch (_) {}
 
   socket.on('typing', ({ receiverId }) => {

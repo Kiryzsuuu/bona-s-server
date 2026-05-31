@@ -18,13 +18,91 @@
     <div class="loading-dots"><span></span><span></span><span></span></div>
   </div>
 
-  <!-- Toast notification -->
+  <!-- Toast -->
   <div class="toast" id="toast"></div>
 
   <!-- Lightbox -->
   <div class="lightbox" id="lightbox" onclick="closeLightbox()">
     <div class="lightbox-close"><i class="ti ti-x"></i></div>
     <img id="lightboxImg" src="" alt="">
+  </div>
+
+  <!-- ── Create Group Modal ── -->
+  <div class="modal-overlay" id="createGroupModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="modal-title">Buat Grup Baru</span>
+        <i class="ti ti-x modal-close" onclick="closeCreateGroupModal()"></i>
+      </div>
+      <div class="modal-body">
+        <div class="grp-pic-area" onclick="document.getElementById('groupPicInput').click()">
+          <div class="grp-pic-preview" id="groupPicPreview">
+            <i class="ti ti-camera"></i>
+            <span>Foto Grup</span>
+          </div>
+        </div>
+        <input type="file" id="groupPicInput" accept="image/*" style="display:none" onchange="previewGroupPic(this)">
+        <div class="modal-field">
+          <label>Nama Grup</label>
+          <input type="text" id="groupName" placeholder="Nama grup..." maxlength="50">
+        </div>
+        <div class="modal-field">
+          <label>Deskripsi (opsional)</label>
+          <input type="text" id="groupDesc" placeholder="Deskripsi..." maxlength="100">
+        </div>
+        <div class="modal-field">
+          <label>Tambah Anggota</label>
+          <input type="text" id="memberSearch" placeholder="Cari nama atau email..." oninput="searchMembersForGroup(this.value)">
+        </div>
+        <div class="member-search-results" id="memberResults"></div>
+        <div class="selected-members-wrap" id="selectedMembers"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal-cancel" onclick="closeCreateGroupModal()">Batal</button>
+        <button class="btn-modal-create" id="createGroupBtn" onclick="submitCreateGroup()">
+          <i class="ti ti-users"></i> Buat Grup
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Group Info Panel (slide from right) ── -->
+  <div class="group-info-panel" id="groupInfoPanel">
+    <div class="gip-header">
+      <i class="ti ti-x gip-close" onclick="closeGroupInfo()"></i>
+      <span>Info Grup</span>
+    </div>
+    <div class="gip-body">
+      <div class="gip-pic-wrap" id="gipPicWrap">
+        <div class="gip-pic" id="gipPic">G</div>
+        <div class="gip-pic-edit" id="gipPicEdit" style="display:none" onclick="document.getElementById('gipPicInput').click()">
+          <i class="ti ti-camera"></i>
+        </div>
+      </div>
+      <input type="file" id="gipPicInput" accept="image/*" style="display:none" onchange="uploadGroupPic(this)">
+      <div class="gip-name" id="gipName">Nama Grup</div>
+      <div class="gip-desc" id="gipDesc"></div>
+      <div class="gip-meta" id="gipMeta"></div>
+
+      <div class="gip-section">
+        <div class="gip-section-title">Anggota</div>
+        <div class="gip-members" id="gipMembers"></div>
+      </div>
+
+      <div class="gip-actions" id="gipActions">
+        <div class="gip-action-item" id="gipAddMember" style="display:none" onclick="showAddMemberInPanel()">
+          <i class="ti ti-user-plus"></i> Tambah Anggota
+        </div>
+        <div class="gip-action-item danger" onclick="leaveGroup()">
+          <i class="ti ti-door-exit"></i> Keluar dari Grup
+        </div>
+      </div>
+
+      <div class="gip-add-member-wrap" id="gipAddWrap" style="display:none">
+        <input type="text" id="gipMemberSearch" class="gip-search-inp" placeholder="Cari pengguna..." oninput="searchMembersInPanel(this.value)">
+        <div id="gipMemberResults"></div>
+      </div>
+    </div>
   </div>
 
   <div class="app" id="app">
@@ -37,20 +115,19 @@
             <div class="b-name">Bonah</div>
             <div class="b-sub">Server</div>
           </div>
+          <button class="new-group-btn" title="Buat Grup Baru" onclick="openCreateGroupModal()">
+            <i class="ti ti-users-plus"></i>
+          </button>
         </div>
         <div class="search-wrap">
           <i class="ti ti-search"></i>
-          <input type="text" id="searchInp" placeholder="Cari pengguna..." autocomplete="off">
+          <input type="text" id="searchInp" placeholder="Cari..." autocomplete="off">
         </div>
       </div>
 
       <div class="search-results" id="searchResults"></div>
-
       <div class="sec-label" id="secLabel">Pesan Terbaru</div>
-
-      <div class="chat-list" id="chatList">
-        <!-- Populated by JS -->
-      </div>
+      <div class="chat-list" id="chatList"></div>
 
       <div class="sb-footer">
         <div class="me-av" id="meAv" onclick="window.location.href='profile.html'">K</div>
@@ -58,8 +135,8 @@
           <div class="me-name" id="meName">Kamu</div>
           <div class="me-stat" id="meStat">● Online</div>
         </div>
-        <i class="ti ti-user-circle" title="Profil Saya" onclick="window.location.href='profile.html'"></i>
-        <i class="ti ti-logout" title="Keluar" onclick="logout()"></i>
+        <i class="ti ti-user-circle" onclick="window.location.href='profile.html'" title="Profil"></i>
+        <i class="ti ti-logout" onclick="logout()" title="Keluar"></i>
       </div>
     </div>
 
@@ -67,30 +144,27 @@
     <div class="main">
       <div class="chat-bg" id="chatBg"></div>
 
-      <!-- Empty state -->
       <div class="empty-state" id="emptyState">
         <i class="ti ti-messages"></i>
         <p>Pilih percakapan</p>
-        <small>atau cari pengguna untuk memulai chat baru</small>
+        <small>atau cari pengguna · buat grup baru</small>
       </div>
 
-      <!-- Chat header -->
+      <!-- Header -->
       <div class="chat-header" id="chatHeader">
         <button class="mob-back" id="mobBack" onclick="showSidebar()"><i class="ti ti-arrow-left"></i></button>
         <div class="av" id="hAv">A</div>
-        <div class="h-info">
+        <div class="h-info" id="hInfoClick">
           <div class="h-name" id="hName">–</div>
           <div class="h-status" id="hStatus">–</div>
         </div>
         <div class="h-actions">
-          <button class="bg-btn" onclick="toggleBgPanel()">
-            <i class="ti ti-photo"></i> Ganti BG
-          </button>
-          <i class="ti ti-dots-vertical"></i>
+          <button class="bg-btn" onclick="toggleBgPanel()"><i class="ti ti-photo"></i> <span>Ganti BG</span></button>
+          <i class="ti ti-info-circle" id="hInfoIcon" title="Info" onclick="openGroupInfo()"></i>
         </div>
       </div>
 
-      <!-- Background panel -->
+      <!-- BG Panel -->
       <div class="bg-panel" id="bgPanel">
         <div class="bp-title">Pilih latar belakang</div>
         <div class="bg-options">
@@ -108,36 +182,38 @@
       <!-- Messages -->
       <div class="msg-area" id="msgArea"></div>
 
-      <!-- Emoji row -->
-      <div class="emoji-row" id="emojiRow">
-        <button class="emoji-chip" onclick="addEmoji('🌸')">🌸</button>
-        <button class="emoji-chip" onclick="addEmoji('💕')">💕</button>
-        <button class="emoji-chip" onclick="addEmoji('✨')">✨</button>
-        <button class="emoji-chip" onclick="addEmoji('🎀')">🎀</button>
-        <button class="emoji-chip" onclick="addEmoji('🌷')">🌷</button>
-        <button class="emoji-chip" onclick="addEmoji('💖')">💖</button>
-        <button class="emoji-chip" onclick="addEmoji('🍵')">🍵</button>
-        <button class="emoji-chip" onclick="addEmoji('🌙')">🌙</button>
+      <!-- Emoji Picker Panel -->
+      <div class="emoji-picker-panel" id="emojiPickerPanel">
+        <div class="ep-cats" id="epCats"></div>
+        <div class="ep-grid" id="epGrid"></div>
       </div>
 
-      <!-- Input bar -->
+      <!-- Input Bar -->
       <div class="input-bar" id="inputBar">
         <i class="ti ti-paperclip" title="Lampiran" onclick="document.getElementById('fileInput').click()"></i>
-        <input type="file" id="fileInput" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" onchange="handleFileSelect(this)">
+        <input type="file" id="fileInput" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" onchange="handleFileSelect(this)" style="display:none">
         <div class="inp-wrap">
           <input class="chat-inp" id="chatInp" type="text" placeholder="Tulis pesan hangat..."
             onkeydown="onKey(event)" oninput="onTyping()">
           <span class="rec-timer" id="recTimer">⏺ 0:00</span>
         </div>
-        <i class="ti ti-microphone mic-btn" id="micBtn" title="Pesan suara"
-          onmousedown="startRecording()" onmouseup="stopRecording()"
-          ontouchstart="startRecording()" ontouchend="stopRecording()"></i>
-        <button class="send-btn" onclick="sendMsg()"><i class="ti ti-send"></i></button>
+        <i class="ti ti-mood-smile ep-toggle-btn" title="Emoji" onclick="toggleEmojiPicker()"></i>
+        <!-- Voice note idle -->
+        <i class="ti ti-microphone mic-btn" id="micBtn" title="Rekam pesan suara" onclick="startRecording()"></i>
+        <!-- Voice note recording controls (hidden by default) -->
+        <div class="rec-controls" id="recControls" style="display:none">
+          <i class="ti ti-trash rec-cancel" title="Batal" onclick="cancelRecording()"></i>
+          <button class="rec-stop-btn" onclick="stopRecording()">
+            <i class="ti ti-player-stop-filled"></i> Kirim
+          </button>
+        </div>
+        <button class="send-btn" id="sendBtn" onclick="sendMsg()"><i class="ti ti-send"></i></button>
       </div>
     </div>
   </div>
 
   <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+  <script src="emoji-data.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
