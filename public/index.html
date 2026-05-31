@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bonah Server</title>
+  <link rel="icon" type="image/png" href="/image%20(7).png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Loading Screen -->
+  <div class="loading-screen" id="loadingScreen">
+    <div class="loading-logo">🦋</div>
+    <div class="loading-text">Bonah Server</div>
+    <div class="loading-dots"><span></span><span></span><span></span></div>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <div class="lightbox-close"><i class="ti ti-x"></i></div>
+    <img id="lightboxImg" src="" alt="">
+  </div>
+
+  <div class="app" id="app">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sb-top">
+        <div class="brand">
+          <div class="brand-mark"><i class="ti ti-butterfly"></i></div>
+          <div class="brand-text">
+            <div class="b-name">Bonah</div>
+            <div class="b-sub">Server</div>
+          </div>
+        </div>
+        <div class="search-wrap">
+          <i class="ti ti-search"></i>
+          <input type="text" id="searchInp" placeholder="Cari pengguna..." autocomplete="off">
+        </div>
+      </div>
+
+      <div class="search-results" id="searchResults"></div>
+
+      <div class="sec-label" id="secLabel">Pesan Terbaru</div>
+
+      <div class="chat-list" id="chatList">
+        <!-- Populated by JS -->
+      </div>
+
+      <div class="sb-footer">
+        <div class="me-av" id="meAv" onclick="window.location.href='profile.html'">K</div>
+        <div class="me-info" onclick="window.location.href='profile.html'">
+          <div class="me-name" id="meName">Kamu</div>
+          <div class="me-stat" id="meStat">● Online</div>
+        </div>
+        <i class="ti ti-user-circle" title="Profil Saya" onclick="window.location.href='profile.html'"></i>
+        <i class="ti ti-logout" title="Keluar" onclick="logout()"></i>
+      </div>
+    </div>
+
+    <!-- Main Chat -->
+    <div class="main">
+      <div class="chat-bg" id="chatBg"></div>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="emptyState">
+        <i class="ti ti-messages"></i>
+        <p>Pilih percakapan</p>
+        <small>atau cari pengguna untuk memulai chat baru</small>
+      </div>
+
+      <!-- Chat header -->
+      <div class="chat-header" id="chatHeader">
+        <button class="mob-back" id="mobBack" onclick="showSidebar()"><i class="ti ti-arrow-left"></i></button>
+        <div class="av" id="hAv">A</div>
+        <div class="h-info">
+          <div class="h-name" id="hName">–</div>
+          <div class="h-status" id="hStatus">–</div>
+        </div>
+        <div class="h-actions">
+          <button class="bg-btn" onclick="toggleBgPanel()">
+            <i class="ti ti-photo"></i> Ganti BG
+          </button>
+          <i class="ti ti-dots-vertical"></i>
+        </div>
+      </div>
+
+      <!-- Background panel -->
+      <div class="bg-panel" id="bgPanel">
+        <div class="bp-title">Pilih latar belakang</div>
+        <div class="bg-options">
+          <div class="bg-opt sel" style="background:#FBF0F3;" data-bg="#FBF0F3" onclick="setBg(this)"><span>Rose Blush</span></div>
+          <div class="bg-opt" style="background:#F0EDF8;" data-bg="#F0EDF8" onclick="setBg(this)"><span>Lavender</span></div>
+          <div class="bg-opt" style="background:#FDF5E6;" data-bg="#FDF5E6" onclick="setBg(this)"><span>Vanilla</span></div>
+          <div class="bg-opt" style="background:#E8F0F5;" data-bg="#E8F0F5" onclick="setBg(this)"><span>Sky Mist</span></div>
+          <div class="bg-opt" style="background:#F0F5E8;" data-bg="#F0F5E8" onclick="setBg(this)"><span>Sage</span></div>
+          <div class="bg-opt" style="background:#F5F0F8;" data-bg="#F5F0F8" onclick="setBg(this)"><span>Dusty Lilac</span></div>
+          <div class="bg-opt" style="background:#2D1F2A;" data-bg="#2D1F2A" onclick="setBg(this)"><span class="dark-label">Malam Gelap</span></div>
+          <div class="bg-opt" style="background:#1E2A2E;" data-bg="#1E2A2E" onclick="setBg(this)"><span class="dark-label">Emerald Night</span></div>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="msg-area" id="msgArea"></div>
+
+      <!-- Emoji row -->
+      <div class="emoji-row" id="emojiRow">
+        <button class="emoji-chip" onclick="addEmoji('🌸')">🌸</button>
+        <button class="emoji-chip" onclick="addEmoji('💕')">💕</button>
+        <button class="emoji-chip" onclick="addEmoji('✨')">✨</button>
+        <button class="emoji-chip" onclick="addEmoji('🎀')">🎀</button>
+        <button class="emoji-chip" onclick="addEmoji('🌷')">🌷</button>
+        <button class="emoji-chip" onclick="addEmoji('💖')">💖</button>
+        <button class="emoji-chip" onclick="addEmoji('🍵')">🍵</button>
+        <button class="emoji-chip" onclick="addEmoji('🌙')">🌙</button>
+      </div>
+
+      <!-- Input bar -->
+      <div class="input-bar" id="inputBar">
+        <i class="ti ti-paperclip" title="Lampiran" onclick="document.getElementById('fileInput').click()"></i>
+        <input type="file" id="fileInput" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" onchange="handleFileSelect(this)">
+        <div class="inp-wrap">
+          <input class="chat-inp" id="chatInp" type="text" placeholder="Tulis pesan hangat..."
+            onkeydown="onKey(event)" oninput="onTyping()">
+          <span class="rec-timer" id="recTimer">⏺ 0:00</span>
+        </div>
+        <i class="ti ti-microphone mic-btn" id="micBtn" title="Pesan suara"
+          onmousedown="startRecording()" onmouseup="stopRecording()"
+          ontouchstart="startRecording()" ontouchend="stopRecording()"></i>
+        <button class="send-btn" onclick="sendMsg()"><i class="ti ti-send"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

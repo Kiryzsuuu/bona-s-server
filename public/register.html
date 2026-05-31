@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daftar – Bonah Server</title>
+  <link rel="icon" type="image/png" href="/image%20(7).png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="auth-brand">
+      <div class="logo">🦋</div>
+      <h1>Bonah Server</h1>
+      <p>Chat Elegan & Feminin</p>
+    </div>
+    <div class="auth-card">
+      <h2 class="auth-title">Buat akun baru 🌷</h2>
+      <p class="auth-sub">Bergabung dengan komunitas Bonah Server</p>
+
+      <div class="alert err" id="alertErr"></div>
+      <div class="alert ok" id="alertOk"></div>
+
+      <form id="regForm">
+        <div class="form-group">
+          <label>Nama Lengkap</label>
+          <input type="text" id="name" placeholder="Nama cantikmu" required>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="email" placeholder="email@kamu.com" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="inp-icon-wrap">
+            <input type="password" id="password" placeholder="Min. 6 karakter" required minlength="6">
+            <i class="ti ti-eye eye" id="eyeBtn" onclick="toggleEye()"></i>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Konfirmasi Password</label>
+          <input type="password" id="confirm" placeholder="Ulangi password" required>
+        </div>
+        <button type="submit" class="btn-primary" id="submitBtn">Daftar Sekarang</button>
+      </form>
+
+      <div class="auth-link">Sudah punya akun? <a href="login.html">Masuk</a></div>
+    </div>
+  </div>
+
+  <script>
+    if (localStorage.getItem('bonah_token')) window.location.replace('/');
+
+    function toggleEye() {
+      const inp = document.getElementById('password');
+      const eye = document.getElementById('eyeBtn');
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+      eye.className = inp.type === 'password' ? 'ti ti-eye eye' : 'ti ti-eye-off eye';
+    }
+
+    document.getElementById('regForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const errEl = document.getElementById('alertErr');
+      errEl.classList.remove('show');
+      document.getElementById('alertOk').classList.remove('show');
+
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm').value;
+
+      if (password !== confirm) {
+        errEl.textContent = 'Password dan konfirmasi tidak cocok';
+        errEl.classList.add('show');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Mendaftar...';
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+
+        localStorage.setItem('bonah_token', data.token);
+        localStorage.setItem('bonah_user', JSON.stringify(data.user));
+        window.location.replace('/');
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Daftar Sekarang';
+      }
+    });
+  </script>
+</body>
+</html>

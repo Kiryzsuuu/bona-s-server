@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile – Bonah Server</title>
+  <link rel="icon" type="image/png" href="/image%20(7).png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="profile.css">
+</head>
+<body>
+  <div class="profile-wrap">
+    <!-- Left Panel -->
+    <div class="pf-left">
+      <div class="pf-avatar-wrap" onclick="document.getElementById('picInput').click()">
+        <div class="pf-avatar" id="pfAvatar">K</div>
+        <div class="pf-avatar-edit"><i class="ti ti-camera"></i></div>
+      </div>
+      <input type="file" id="picInput" accept="image/*">
+
+      <div class="pf-name" id="pfName">Kamu</div>
+      <div class="pf-email" id="pfEmail">email@kamu.com</div>
+      <div class="pf-status-badge"><span class="dot"></span><span id="pfStatusBadge">Online</span></div>
+
+      <nav class="pf-nav">
+        <div class="pf-nav-item active" onclick="showTab('info')">
+          <i class="ti ti-user"></i> Profil
+        </div>
+        <div class="pf-nav-item" onclick="showTab('status')">
+          <i class="ti ti-message-circle"></i> Status & About
+        </div>
+        <div class="pf-nav-item" onclick="showTab('email')">
+          <i class="ti ti-mail"></i> Ubah Email
+        </div>
+        <div class="pf-nav-item" onclick="showTab('password')">
+          <i class="ti ti-lock"></i> Ubah Password
+        </div>
+        <div class="pf-nav-item" onclick="showTab('background')">
+          <i class="ti ti-photo"></i> Background Chat
+        </div>
+      </nav>
+
+      <div class="pf-back" onclick="window.location.replace('/')">
+        <i class="ti ti-arrow-left"></i> Kembali ke Chat
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="pf-right">
+
+      <!-- Tab: Profil Info -->
+      <div class="tab-pane active" id="tab-info">
+        <div class="pf-section-title">Informasi Profil 🌸</div>
+        <div class="pf-section-sub">Perbarui nama tampilan dan foto profilmu.</div>
+        <div class="alert err" id="infoErr"></div>
+        <div class="alert ok" id="infoOk"></div>
+        <form id="infoForm">
+          <div class="form-group">
+            <label>Nama Tampilan</label>
+            <input type="text" id="infoName" placeholder="Namamu" required>
+          </div>
+          <div class="form-group">
+            <label>Status Online</label>
+            <select id="infoOnlineStatus">
+              <option value="online">🟢 Online</option>
+              <option value="away">🟡 Away</option>
+              <option value="busy">🔴 Sibuk</option>
+              <option value="offline">⚫ Offline</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-save" id="infoBtn">Simpan Perubahan</button>
+        </form>
+      </div>
+
+      <!-- Tab: Status & About -->
+      <div class="tab-pane" id="tab-status">
+        <div class="pf-section-title">Status & About 💬</div>
+        <div class="pf-section-sub">Ceritakan sedikit tentang dirimu kepada teman-temanmu.</div>
+        <div class="alert err" id="statusErr"></div>
+        <div class="alert ok" id="statusOk"></div>
+        <form id="statusForm">
+          <div class="form-group">
+            <label>Status (teks singkat)</label>
+            <input type="text" id="statusText" placeholder="Contoh: Lagi sibuk coding 🌸" maxlength="100">
+          </div>
+          <div class="form-group">
+            <label>About</label>
+            <textarea id="aboutText" rows="4" placeholder="Ceritakan sedikit tentang dirimu..."></textarea>
+          </div>
+          <button type="submit" class="btn-save" id="statusBtn">Simpan</button>
+        </form>
+      </div>
+
+      <!-- Tab: Ubah Email -->
+      <div class="tab-pane" id="tab-email">
+        <div class="pf-section-title">Ubah Email 📧</div>
+        <div class="pf-section-sub">Masukkan email baru dan konfirmasi dengan password saat ini.</div>
+        <div class="alert err" id="emailErr"></div>
+        <div class="alert ok" id="emailOk"></div>
+        <form id="emailForm">
+          <div class="form-group">
+            <label>Email Baru</label>
+            <input type="email" id="emailNew" placeholder="email.baru@kamu.com" required>
+          </div>
+          <div class="form-group">
+            <label>Password Saat Ini</label>
+            <div class="inp-icon-wrap">
+              <input type="password" id="emailPass" placeholder="Konfirmasi dengan password" required>
+              <i class="ti ti-eye eye" onclick="toggleEye(this, 'emailPass')"></i>
+            </div>
+          </div>
+          <button type="submit" class="btn-save" id="emailBtn">Update Email</button>
+        </form>
+      </div>
+
+      <!-- Tab: Ubah Password -->
+      <div class="tab-pane" id="tab-password">
+        <div class="pf-section-title">Ubah Password 🔑</div>
+        <div class="pf-section-sub">Pastikan password barumu minimal 6 karakter dan mudah kamu ingat.</div>
+        <div class="alert err" id="passErr"></div>
+        <div class="alert ok" id="passOk"></div>
+        <form id="passForm">
+          <div class="form-group">
+            <label>Password Saat Ini</label>
+            <div class="inp-icon-wrap">
+              <input type="password" id="passCurrent" placeholder="Password lama" required>
+              <i class="ti ti-eye eye" onclick="toggleEye(this, 'passCurrent')"></i>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Password Baru</label>
+            <div class="inp-icon-wrap">
+              <input type="password" id="passNew" placeholder="Min. 6 karakter" required minlength="6">
+              <i class="ti ti-eye eye" onclick="toggleEye(this, 'passNew')"></i>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Konfirmasi Password Baru</label>
+            <input type="password" id="passConfirm" placeholder="Ulangi password baru" required>
+          </div>
+          <button type="submit" class="btn-save" id="passBtn">Update Password</button>
+        </form>
+      </div>
+
+      <!-- Tab: Background -->
+      <div class="tab-pane" id="tab-background">
+        <div class="pf-section-title">Background Chat 🎨</div>
+        <div class="pf-section-sub">Pilih warna latar belakang chat favoritmu — tersimpan di semua perangkat.</div>
+        <div class="alert ok" id="bgOk"></div>
+        <div class="bg-grid" id="bgGrid">
+          <div class="bg-swatch" style="background:#FBF0F3;" data-bg="#FBF0F3" onclick="selectBg(this)"><span>Rose Blush</span></div>
+          <div class="bg-swatch" style="background:#F0EDF8;" data-bg="#F0EDF8" onclick="selectBg(this)"><span>Lavender</span></div>
+          <div class="bg-swatch" style="background:#FDF5E6;" data-bg="#FDF5E6" onclick="selectBg(this)"><span>Vanilla</span></div>
+          <div class="bg-swatch" style="background:#E8F0F5;" data-bg="#E8F0F5" onclick="selectBg(this)"><span>Sky Mist</span></div>
+          <div class="bg-swatch" style="background:#F0F5E8;" data-bg="#F0F5E8" onclick="selectBg(this)"><span>Sage</span></div>
+          <div class="bg-swatch" style="background:#F5F0F8;" data-bg="#F5F0F8" onclick="selectBg(this)"><span>Dusty Lilac</span></div>
+          <div class="bg-swatch" style="background:#FDE8F0;" data-bg="#FDE8F0" onclick="selectBg(this)"><span>Petal Pink</span></div>
+          <div class="bg-swatch" style="background:#E8F5F0;" data-bg="#E8F5F0" onclick="selectBg(this)"><span>Mint Dew</span></div>
+          <div class="bg-swatch" style="background:#2D1F2A;" data-bg="#2D1F2A" onclick="selectBg(this)"><span class="dl">Malam Gelap</span></div>
+          <div class="bg-swatch" style="background:#1E2A2E;" data-bg="#1E2A2E" onclick="selectBg(this)"><span class="dl">Emerald Night</span></div>
+          <div class="bg-swatch" style="background:#1A1A2E;" data-bg="#1A1A2E" onclick="selectBg(this)"><span class="dl">Midnight</span></div>
+          <div class="bg-swatch" style="background:#2A1F3D;" data-bg="#2A1F3D" onclick="selectBg(this)"><span class="dl">Deep Purple</span></div>
+        </div>
+        <button class="btn-save" id="bgBtn" onclick="saveBg()">Simpan Background</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="profile.js"></script>
+</body>
+</html>

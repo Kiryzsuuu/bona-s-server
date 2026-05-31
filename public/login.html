@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login – Bonah Server</title>
+  <link rel="icon" type="image/png" href="/image%20(7).png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="auth-brand">
+      <div class="logo">🦋</div>
+      <h1>Bonah Server</h1>
+      <p>Chat Elegan & Feminin</p>
+    </div>
+    <div class="auth-card">
+      <h2 class="auth-title">Selamat datang kembali 🌸</h2>
+      <p class="auth-sub">Masuk ke akun Bonah Server kamu</p>
+
+      <div class="alert err" id="alertErr"></div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="email" placeholder="email@kamu.com" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="inp-icon-wrap">
+            <input type="password" id="password" placeholder="Password kamu" required>
+            <i class="ti ti-eye eye" id="eyeBtn" onclick="toggleEye()"></i>
+          </div>
+        </div>
+        <div class="forgot-link"><a href="forgot-password.html">Lupa password?</a></div>
+        <button type="submit" class="btn-primary" id="submitBtn">Masuk</button>
+      </form>
+
+      <div class="auth-link">Belum punya akun? <a href="register.html">Daftar sekarang</a></div>
+    </div>
+  </div>
+
+  <script>
+    // Redirect if already logged in
+    if (localStorage.getItem('bonah_token') && localStorage.getItem('bonah_user')) {
+      window.location.replace('/');
+    }
+
+    function toggleEye() {
+      const inp = document.getElementById('password');
+      const eye = document.getElementById('eyeBtn');
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+      eye.className = inp.type === 'password' ? 'ti ti-eye eye' : 'ti ti-eye-off eye';
+    }
+
+    function showErr(msg) {
+      const el = document.getElementById('alertErr');
+      el.textContent = msg;
+      el.classList.add('show');
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Masuk...';
+      document.getElementById('alertErr').classList.remove('show');
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('email').value.trim(),
+            password: document.getElementById('password').value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+        localStorage.setItem('bonah_token', data.token);
+        localStorage.setItem('bonah_user', JSON.stringify(data.user));
+        window.location.replace('/');
+      } catch (err) {
+        showErr(err.message);
+        btn.disabled = false;
+        btn.textContent = 'Masuk';
+      }
+    });
+  </script>
+</body>
+</html>
