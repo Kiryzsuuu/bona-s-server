@@ -10,7 +10,7 @@
 }
 
 body{
-  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display',system-ui,sans-serif;background:var(--body-bg,#F0E4E8);
+  font-family:var(--font-text);background:var(--body-bg,#F0E4E8);
   display:flex;justify-content:center;align-items:stretch;
   height:100vh;height:100dvh;overflow:hidden;padding:0;
 }
@@ -27,7 +27,7 @@ body{
   display:flex;align-items:center;justify-content:center;font-size:30px;
   box-shadow:0 4px 20px rgba(196,120,138,.4);
 }
-.loading-text{font-family:'New York','Georgia',serif;font-size:22px;color:var(--text-main);}
+.loading-text{font-family:var(--font-serif);font-size:22px;color:var(--text-main);}
 .loading-dots{display:flex;gap:5px;}
 .loading-dots span{
   width:7px;height:7px;border-radius:50%;background:var(--rose-mid);
@@ -60,7 +60,7 @@ body{
 }
 .brand-mark i{color:#fff;font-size:18px;}
 .brand-text .b-name{
-  font-family:'New York','Georgia',serif;font-size:20px;font-weight:600;
+  font-family:var(--font-serif);font-size:20px;font-weight:600;
   color:var(--text-main);letter-spacing:.2px;line-height:1;
 }
 .brand-text .b-sub{font-size:10px;color:var(--rose);letter-spacing:2px;font-weight:500;text-transform:uppercase;}
@@ -72,7 +72,7 @@ body{
 .search-wrap i{color:var(--rose);font-size:15px;}
 .search-wrap input{
   border:none;background:transparent;font-size:13px;
-  color:var(--text-main);outline:none;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display',system-ui,sans-serif;width:100%;
+  color:var(--text-main);outline:none;font-family:var(--font-text);width:100%;
 }
 .search-wrap input::placeholder{color:var(--text-hint);}
 
@@ -115,7 +115,7 @@ body{
 
 .av{
   width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font-family:'New York','Georgia',serif;font-size:16px;font-weight:500;
+  font-family:var(--font-rounded);font-size:16px;font-weight:500;
   flex-shrink:0;position:relative;overflow:hidden;background:var(--rose-light);color:var(--rose-deep);
 }
 .av img{width:100%;height:100%;object-fit:cover;}
@@ -145,7 +145,7 @@ body{
 .me-av{
   width:36px;height:36px;border-radius:50%;background:var(--rose);
   display:flex;align-items:center;justify-content:center;
-  font-family:'New York','Georgia',serif;font-size:15px;font-weight:500;
+  font-family:var(--font-rounded);font-size:15px;font-weight:500;
   color:#fff;cursor:pointer;overflow:hidden;flex-shrink:0;
 }
 .me-av img{width:100%;height:100%;object-fit:cover;}
@@ -166,7 +166,7 @@ body{
   justify-content:center;gap:10px;z-index:1;
 }
 .empty-state i{font-size:48px;color:var(--rose-mid);}
-.empty-state p{font-family:'New York','Georgia',serif;font-size:18px;color:var(--text-hint);}
+.empty-state p{font-family:var(--font-display);font-size:18px;color:var(--text-hint);}
 .empty-state small{font-size:12px;color:var(--text-hint);}
 
 /* Header */
@@ -177,7 +177,7 @@ body{
 }
 .chat-header.show{display:flex;}
 .h-info{flex:1;}
-.h-name{font-family:'New York','Georgia',serif;font-size:17px;font-weight:600;color:var(--text-main);}
+.h-name{font-family:var(--font-display);font-size:17px;font-weight:600;color:var(--text-main);}
 .h-status{font-size:11.5px;color:var(--rose);}
 .h-actions{display:flex;gap:14px;align-items:center;}
 .h-actions i{color:var(--text-muted);font-size:19px;cursor:pointer;transition:color .15s;}
@@ -187,7 +187,7 @@ body{
   display:flex;align-items:center;gap:5px;background:var(--rose-light);
   border:1px solid #E8B4BF;border-radius:20px;padding:5px 12px;cursor:pointer;
   transition:background .15s;font-size:11.5px;color:var(--rose-deep);
-  font-weight:500;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display',system-ui,sans-serif;
+  font-weight:500;font-family:var(--font-text);
 }
 .bg-btn i{font-size:14px;color:var(--rose);}
 .bg-btn:hover{background:#EDD0D8;}
@@ -351,7 +351,7 @@ body{
   display:flex;align-items:center;padding:0 14px;gap:8px;
 }
 .chat-inp{
-  border:none;background:transparent;font-size:13.5px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display',system-ui,sans-serif;
+  border:none;background:transparent;font-size:13.5px;font-family:var(--font-text);
   color:var(--text-main);outline:none;flex:1;padding:10px 0;
 }
 .chat-inp::placeholder{color:var(--text-hint);}
@@ -380,7 +380,7 @@ body{
 .rec-stop-btn{
   display:flex;align-items:center;gap:5px;
   background:var(--rose);color:#fff;border:none;border-radius:20px;
-  padding:6px 14px;font-size:12.5px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display',system-ui,sans-serif;
+  padding:6px 14px;font-size:12.5px;font-family:var(--font-text);
   cursor:pointer;transition:background .15s;white-space:nowrap;flex-shrink:0;
 }
 .rec-stop-btn:hover{background:var(--rose-deep);}
@@ -415,7 +415,7 @@ body{
 .bubble-edit-inp{
   background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.4);
   border-radius:10px;padding:6px 10px;font-size:13.5px;
-  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display',system-ui,sans-serif;color:#fff;outline:none;width:100%;
+  font-family:var(--font-text);color:#fff;outline:none;width:100%;
   min-width:140px;
 }
 .bubble.other .bubble-edit-inp{
@@ -424,7 +424,7 @@ body{
 .bubble-edit-actions{display:flex;gap:6px;margin-top:6px;}
 .bea-btn{
   font-size:11.5px;padding:4px 12px;border-radius:20px;border:none;cursor:pointer;
-  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display',system-ui,sans-serif;
+  font-family:var(--font-text);
 }
 .bea-save{background:var(--rose);color:#fff;}
 .bea-cancel{background:var(--rose-light);color:var(--rose-deep);}
@@ -508,7 +508,7 @@ body{
 @keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 .notif-banner button{
   background:var(--rose);color:#fff;border:none;border-radius:20px;
-  padding:5px 14px;font-size:12px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display',system-ui,sans-serif;
+  padding:5px 14px;font-size:12px;cursor:pointer;font-family:var(--font-text);
   white-space:nowrap;
 }
 .notif-banner .nb-close{
@@ -551,7 +551,7 @@ body{
   padding:18px 20px 14px;border-bottom:1px solid #F0DCE2;
   display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
 }
-.modal-title{font-family:'New York','Georgia',serif;font-size:18px;font-weight:600;color:var(--text-main);}
+.modal-title{font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text-main);}
 .modal-close{color:var(--text-hint);font-size:20px;cursor:pointer;transition:color .15s;}
 .modal-close:hover{color:var(--rose);}
 
@@ -575,7 +575,7 @@ body{
 .modal-field label{display:block;font-size:11.5px;font-weight:500;color:var(--text-muted);margin-bottom:5px;letter-spacing:.3px;}
 .modal-field input{
   width:100%;background:#F5E6EA;border:1.5px solid transparent;border-radius:12px;
-  padding:10px 13px;font-size:13.5px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display',system-ui,sans-serif;
+  padding:10px 13px;font-size:13.5px;font-family:var(--font-text);
   color:var(--text-main);outline:none;transition:border .2s,background .2s;
 }
 .modal-field input:focus{background:#fff;border-color:var(--rose);}
@@ -616,12 +616,12 @@ body{
 .btn-modal-cancel{
   background:none;border:1.5px solid #E8C5CC;border-radius:20px;
   padding:8px 20px;font-size:13px;color:var(--text-muted);cursor:pointer;
-  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display',system-ui,sans-serif;transition:all .15s;
+  font-family:var(--font-text);transition:all .15s;
 }
 .btn-modal-cancel:hover{border-color:var(--rose);color:var(--rose);}
 .btn-modal-create{
   background:var(--rose);color:#fff;border:none;border-radius:20px;
-  padding:8px 20px;font-size:13px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display',system-ui,sans-serif;
+  padding:8px 20px;font-size:13px;font-family:var(--font-text);
   cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:6px;
 }
 .btn-modal-create:hover{background:var(--rose-deep);}
@@ -643,7 +643,7 @@ body{
   display:flex;align-items:center;gap:12px;flex-shrink:0;
   background:var(--cream);
 }
-.gip-header span{font-family:'New York','Georgia',serif;font-size:17px;font-weight:600;color:var(--text-main);}
+.gip-header span{font-family:var(--font-display);font-size:17px;font-weight:600;color:var(--text-main);}
 .gip-close{color:var(--text-muted);font-size:18px;cursor:pointer;transition:color .15s;}
 .gip-close:hover{color:var(--rose);}
 
@@ -654,7 +654,7 @@ body{
 .gip-pic-wrap{position:relative;display:flex;justify-content:center;margin-bottom:14px;}
 .gip-pic{
   width:80px;height:80px;border-radius:50%;background:var(--lav-light);color:var(--lav-deep);
-  font-family:'New York','Georgia',serif;font-size:28px;font-weight:500;
+  font-family:var(--font-rounded);font-size:28px;font-weight:500;
   display:flex;align-items:center;justify-content:center;overflow:hidden;
   border:2px solid #E8DDF8;
 }
@@ -667,7 +667,7 @@ body{
 }
 .gip-pic-edit i{color:#fff;font-size:12px;}
 
-.gip-name{font-family:'New York','Georgia',serif;font-size:19px;font-weight:600;color:var(--text-main);text-align:center;margin-bottom:3px;}
+.gip-name{font-family:var(--font-display);font-size:19px;font-weight:600;color:var(--text-main);text-align:center;margin-bottom:3px;}
 .gip-desc{font-size:12px;color:var(--text-muted);text-align:center;margin-bottom:4px;}
 .gip-meta{font-size:11px;color:var(--text-hint);text-align:center;margin-bottom:18px;}
 
@@ -703,7 +703,7 @@ body{
 .gip-invite-btn{
   background:var(--rose-light);border:1px solid var(--rose-mid);
   border-radius:20px;padding:6px 14px;font-size:12px;color:var(--rose-deep);
-  cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display',system-ui,sans-serif;
+  cursor:pointer;font-family:var(--font-text);
   display:inline-flex;align-items:center;gap:5px;transition:background .15s;
 }
 .gip-invite-btn:hover{background:#EDD0D8;}
@@ -711,7 +711,7 @@ body{
 .gip-invite-reset:hover{background:#FFE0E0;}
 .gip-search-inp{
   width:100%;background:#F5E6EA;border:1.5px solid transparent;border-radius:12px;
-  padding:9px 12px;font-size:13px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display',system-ui,sans-serif;
+  padding:9px 12px;font-size:13px;font-family:var(--font-text);
   color:var(--text-main);outline:none;transition:border .2s;
 }
 .gip-search-inp:focus{border-color:var(--rose);background:#fff;}

@@ -466,4 +466,45 @@ router.post('/:id/messages', auth, mediaUpload.single('media'), async (req, res)
   }
 });
 
+// PUT /api/groups/:id/messages/:msgId — edit group message
+router.put('/:id/messages/:msgId', auth, async (req, res) => {
+  try {
+    const msg = await GroupMessage.findById(req.params.msgId);
+    if (!msg) return res.status(404).json({ message: 'Pesan tidak ditemukan' });
+    if (msg.group.toString() !== req.params.id) return res.status(400).json({ message: 'Pesan bukan dari grup ini' });
+    if (msg.sender.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Bukan pesanmu' });
+    if (msg.type !== 'text') return res.status(400).json({ message: 'Hanya pesan teks yang bisa diedit' });
+
+    msg.content = req.body.content || msg.content;
+    msg.edited = true;
+    await msg.save();
+
+    const io = req.app.get('io');
+    io.to(`group:${req.params.id}`).emit('group-message-edited', { _id: msg._id, content: msg.content, groupId: req.params.id });
+
+    res.json({ message: 'Pesan berhasil diedit', msg });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// DELETE /api/groups/:id/messages/:msgId — delete group message
+router.delete('/:id/messages/:msgId', auth, async (req, res) => {
+  try {
+    const msg = await GroupMessage.findById(req.params.msgId);
+    if (!msg) return res.status(404).json({ message: 'Pesan tidak ditemukan' });
+    if (msg.group.toString() !== req.params.id) return res.status(400).json({ message: 'Pesan bukan dari grup ini' });
+    if (msg.sender.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Bukan pesanmu' });
+
+    await msg.deleteOne();
+
+    const io = req.app.get('io');
+    io.to(`group:${req.params.id}`).emit('group-message-deleted', { _id: msg._id, groupId: req.params.id });
+
+    res.json({ message: 'Pesan berhasil dihapus' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;

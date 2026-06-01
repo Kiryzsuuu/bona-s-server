@@ -4,7 +4,16 @@
    ════════════════════════════════════════════ */
 
 /* ─── BONAH (Default) ─── already in :root */
-:root { --body-bg:#F0E4E8; --chip-bg:rgba(253,248,245,.85); --chip-border:#F0DCE2; }
+:root {
+  --body-bg:#F0E4E8; --chip-bg:rgba(253,248,245,.85); --chip-border:#F0DCE2;
+
+  /* ── Apple Font System ── */
+  --font-display:'SF Pro Display',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --font-text:'SF Pro Text',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --font-rounded:'SF Pro Rounded',-apple-system,system-ui,sans-serif;
+  --font-mono:'SF Mono','SFMono-Regular',ui-monospace,'Menlo',monospace;
+  --font-serif:'New York',ui-serif,Georgia,serif;
+}
 
 /* ════ DARK — Material Dark ════ */
 html[data-theme="dark"] {

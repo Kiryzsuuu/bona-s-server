@@ -625,6 +625,21 @@ function connectSocket() {
     document.querySelector(`.mw[data-msg-id="${_id}"]`)?.remove();
   });
 
+  socket.on('group-message-edited', ({ _id, content }) => {
+    const wrap = document.querySelector(`.mw[data-msg-id="${_id}"]`);
+    if (wrap) {
+      const bubble = wrap.querySelector('.bubble');
+      if (bubble) bubble.textContent = content;
+      const meta = wrap.querySelector('.b-meta');
+      if (meta && !meta.querySelector('.msg-edited'))
+        meta.insertAdjacentHTML('beforeend', '<span class="msg-edited">(diedit)</span>');
+    }
+  });
+
+  socket.on('group-message-deleted', ({ _id }) => {
+    document.querySelector(`.mw[data-msg-id="${_id}"]`)?.remove();
+  });
+
   socket.on('messages-read', () => {
     document.querySelectorAll('.mw.me .tick').forEach(el => el.classList.add('read'));
   });
@@ -1212,7 +1227,10 @@ async function saveEdit() {
   if (!newContent) return;
 
   try {
-    const res = await fetch(`/api/messages/${_ctxMsgId}`, {
+    const editUrl = currentChat.type === 'group'
+      ? `/api/groups/${currentChat.id}/messages/${_ctxMsgId}`
+      : `/api/messages/${_ctxMsgId}`;
+    const res = await fetch(editUrl, {
       method: 'PUT',
       headers: { ...auth(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: newContent })
@@ -1245,7 +1263,10 @@ async function deleteMsg() {
   if (!confirm('Hapus pesan ini?')) return;
 
   try {
-    const res = await fetch(`/api/messages/${_ctxMsgId}`, { method: 'DELETE', headers: auth() });
+    const delUrl = currentChat.type === 'group'
+      ? `/api/groups/${currentChat.id}/messages/${_ctxMsgId}`
+      : `/api/messages/${_ctxMsgId}`;
+    const res = await fetch(delUrl, { method: 'DELETE', headers: auth() });
     if (!res.ok) throw new Error('Gagal');
     _ctxMsgWrap.remove();
     showToast('Pesan dihapus');
