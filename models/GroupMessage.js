@@ -11,7 +11,8 @@ const groupMessageSchema = new mongoose.Schema({
   },
   mediaUrl: { type: String, default: null },
   fileName: { type: String, default: null },
-  readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+  readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  edited: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('GroupMessage', groupMessageSchema);

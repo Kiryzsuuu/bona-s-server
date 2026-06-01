@@ -6,6 +6,7 @@
 /* ─── BONAH (Default) ─── already in :root */
 :root {
   --body-bg:#F0E4E8; --chip-bg:rgba(253,248,245,.85); --chip-border:#F0DCE2;
+  --sidebar-bg:#FDF5F7; --input-bg:#F5E6EA; --scrollbar-color:#E8C5CC;
 
   /* ── Apple Font System ── */
   --font-display:'SF Pro Display',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
@@ -18,6 +19,7 @@
 /* ════ DARK — Material Dark ════ */
 html[data-theme="dark"] {
   --body-bg:#0F0D13; --chip-bg:rgba(43,41,48,.9); --chip-border:#48454E;
+  --sidebar-bg:#211F26; --input-bg:#2B2930; --scrollbar-color:#48454E;
   --rose:#BB86FC; --rose-light:#2D1F3D; --rose-mid:#9C64F5; --rose-deep:#D4BBFF;
   --lav:#03DAC6; --lav-light:#1A3330; --lav-deep:#00B3A1;
   --cream:#1C1B1F; --cream2:#2B2930;
@@ -78,6 +80,7 @@ html[data-theme="dark"] .gip-member-item:hover { background:#2D1F3D; }
 /* ════ iOS — Clean Apple Design ════ */
 html[data-theme="ios"] {
   --body-bg:#F2F2F7; --chip-bg:rgba(255,255,255,.85); --chip-border:#E5E5EA;
+  --sidebar-bg:#F2F2F7; --input-bg:#EFEFF4; --scrollbar-color:#C7C7CC;
   --rose:#007AFF; --rose-light:#E3F0FF; --rose-mid:#5AC8FA; --rose-deep:#0055B3;
   --lav:#34C759; --lav-light:#E8FFF0; --lav-deep:#248A3D;
   --cream:#FFFFFF; --cream2:#F2F2F7;
@@ -117,6 +120,7 @@ html[data-theme="ios"] .date-chip span { background:rgba(255,255,255,.85); borde
 /* ════ PACMAN — Retro Gaming ════ */
 html[data-theme="pacman"] {
   --body-bg:#000; --chip-bg:rgba(13,13,26,.9); --chip-border:#FFE000;
+  --sidebar-bg:#080818; --input-bg:#12122A; --scrollbar-color:#FFE000;
   --rose:#FFE000; --rose-light:#2A2A00; --rose-mid:#FFD000; --rose-deep:#FFEA66;
   --lav:#FF0000; --lav-light:#2A0000; --lav-deep:#FF4444;
   --cream:#0D0D1A; --cream2:#12122A;
@@ -181,6 +185,7 @@ html[data-theme="pacman"] .pf-mob-topbar { background:#080818; border-color:#FFE
 /* ════ OCEAN — Samudra Biru ════ */
 html[data-theme="ocean"] {
   --body-bg:#C9EFF8; --chip-bg:rgba(240,253,255,.85); --chip-border:#90E0EF;
+  --sidebar-bg:#E0F7FA; --input-bg:#CAF0F8; --scrollbar-color:#48CAE4;
   --rose:#0077B6; --rose-light:#CAF0F8; --rose-mid:#48CAE4; --rose-deep:#023E8A;
   --lav:#00B4D8; --lav-light:#E0F7FA; --lav-deep:#0096C7;
   --cream:#F0FDFF; --cream2:#E0F7FA;
@@ -213,6 +218,7 @@ html[data-theme="ocean"] .auth-card { background:#F0FDFF; border-color:#90E0EF; 
 /* ════ FOREST — Hutan Hijau ════ */
 html[data-theme="forest"] {
   --body-bg:#C8EDD4; --chip-bg:rgba(240,255,244,.85); --chip-border:#B7E4C7;
+  --sidebar-bg:#E8F5E9; --input-bg:#D8F3DC; --scrollbar-color:#74C69D;
   --rose:#2D6A4F; --rose-light:#D8F3DC; --rose-mid:#74C69D; --rose-deep:#1B4332;
   --lav:#52B788; --lav-light:#B7E4C7; --lav-deep:#40916C;
   --cream:#F0FFF4; --cream2:#D8F3DC;
@@ -245,6 +251,7 @@ html[data-theme="forest"] .auth-card { background:#F0FFF4; border-color:#B7E4C7;
 /* ════ SUNSET — Senja Oranye ════ */
 html[data-theme="sunset"] {
   --body-bg:#FFDDB4; --chip-bg:rgba(255,250,245,.85); --chip-border:#FFD0A0;
+  --sidebar-bg:#FFF5E8; --input-bg:#FFEDE0; --scrollbar-color:#F48C06;
   --rose:#E85D04; --rose-light:#FFEDE0; --rose-mid:#F48C06; --rose-deep:#6A040F;
   --lav:#F48C06; --lav-light:#FFF3E0; --lav-deep:#DC2F02;
   --cream:#FFFAF5; --cream2:#FFEDE0;
@@ -277,6 +284,7 @@ html[data-theme="sunset"] .auth-card { background:#FFFAF5; border-color:#FFD0A0;
 /* ════ MIDNIGHT — Malam Biru Gelap ════ */
 html[data-theme="midnight"] {
   --body-bg:#010409; --chip-bg:rgba(13,17,23,.9); --chip-border:#30363D;
+  --sidebar-bg:#161B22; --input-bg:#161B22; --scrollbar-color:#30363D;
   --rose:#4FC3F7; --rose-light:#0D2233; --rose-mid:#29B6F6; --rose-deep:#B3E5FC;
   --lav:#CE93D8; --lav-light:#1A1230; --lav-deep:#AB47BC;
   --cream:#0D1117; --cream2:#161B22;
@@ -329,6 +337,7 @@ html[data-theme="midnight"] .gip-member-item:hover { background:#0D2233; }
 /* ════ SAKURA — Bunga Sakura ════ */
 html[data-theme="sakura"] {
   --body-bg:#FFB3C6; --chip-bg:rgba(255,248,252,.85); --chip-border:#F8BBD0;
+  --sidebar-bg:#FFF0F6; --input-bg:#FCE4EC; --scrollbar-color:#F06292;
   --rose:#E91E63; --rose-light:#FCE4EC; --rose-mid:#F06292; --rose-deep:#880E4F;
   --lav:#F8BBD0; --lav-light:#FFF8FC; --lav-deep:#C2185B;
   --cream:#FFF8FC; --cream2:#FCE4EC;

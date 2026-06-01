@@ -252,6 +252,7 @@ function buildBubble(msg, isGroup) {
 
   const wrap = document.createElement('div');
   wrap.className = `mw ${isMe?'me':'other'}`;
+  if (msg._id) wrap.dataset.msgId = msg._id;
 
   let body = '';
   if (msg.type==='image' && msg.mediaUrl) {
@@ -1235,7 +1236,10 @@ async function saveEdit() {
       headers: { ...auth(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: newContent })
     });
-    if (!res.ok) throw new Error('Gagal');
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || `HTTP ${res.status}`);
+    }
     const bubble = _ctxMsgWrap.querySelector('.bubble');
     bubble.textContent = newContent;
     // Add edited label
@@ -1244,9 +1248,9 @@ async function saveEdit() {
       meta.insertAdjacentHTML('beforeend', '<span class="msg-edited">(diedit)</span>');
     }
     showToast('Pesan diedit ✓');
-  } catch {
+  } catch (err) {
     cancelEdit();
-    showToast('Gagal mengedit pesan');
+    showToast('Gagal: ' + err.message);
   }
 }
 
@@ -1259,7 +1263,7 @@ function cancelEdit() {
 
 async function deleteMsg() {
   document.getElementById('msgCtx').classList.remove('show');
-  if (!_ctxMsgId || !_ctxMsgWrap) return;
+  if (!_ctxMsgId || !_ctxMsgWrap) { showToast('Error: ID pesan tidak ditemukan'); return; }
   if (!confirm('Hapus pesan ini?')) return;
 
   try {
@@ -1267,11 +1271,14 @@ async function deleteMsg() {
       ? `/api/groups/${currentChat.id}/messages/${_ctxMsgId}`
       : `/api/messages/${_ctxMsgId}`;
     const res = await fetch(delUrl, { method: 'DELETE', headers: auth() });
-    if (!res.ok) throw new Error('Gagal');
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || `HTTP ${res.status}`);
+    }
     _ctxMsgWrap.remove();
     showToast('Pesan dihapus');
-  } catch {
-    showToast('Gagal menghapus pesan');
+  } catch (err) {
+    showToast('Gagal: ' + err.message);
   }
 }
 
