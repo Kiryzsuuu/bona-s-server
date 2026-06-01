@@ -251,7 +251,7 @@ function buildBubble(msg, isGroup) {
     body = `<img class="msg-img" src="${msg.mediaUrl}" alt="Foto" onclick="openLightbox('${msg.mediaUrl}')">`;
     if (msg.content) body += `<div>${escHtml(msg.content)}</div>`;
   } else if (msg.type==='voice' && msg.mediaUrl) {
-    body = `<audio class="msg-audio" controls src="${msg.mediaUrl}"></audio>`;
+    body = buildVoicePlayer(msg.mediaUrl, isMe);
   } else if (msg.type==='video' && msg.mediaUrl) {
     body = `<video class="msg-video" controls src="${msg.mediaUrl}"></video>`;
   } else if (msg.type==='file' && msg.mediaUrl) {
@@ -264,13 +264,99 @@ function buildBubble(msg, isGroup) {
     ? `<div class="m-sender">${escHtml(msg.sender?.name||'')}</div>` : '';
   const tick = isMe ? `<i class="ti ti-checks tick ${msg.isRead?'read':'me'}"></i>` : '';
 
-  wrap.innerHTML = `${senderLine}<div class="bubble ${isMe?'me':'other'}">${body}</div>
-    <div class="b-meta"><span class="b-time ${isMe?'me':'ot'}">${time}</span>${tick}</div>`;
+  // Voice player sudah punya tampilannya sendiri, tidak butuh .bubble wrapper
+  if (msg.type === 'voice' && msg.mediaUrl) {
+    wrap.innerHTML = `${senderLine}${body}
+      <div class="b-meta"><span class="b-time ${isMe?'me':'ot'}">${time}</span>${tick}</div>`;
+  } else {
+    wrap.innerHTML = `${senderLine}<div class="bubble ${isMe?'me':'other'}">${body}</div>
+      <div class="b-meta"><span class="b-time ${isMe?'me':'ot'}">${time}</span>${tick}</div>`;
+  }
   return wrap;
 }
 
 function systemMsg(text) {
   return `<div class="sys-msg"><span>${escHtml(text)}</span></div>`;
+}
+
+// ── Custom voice note player ──
+function buildVoicePlayer(src, isMe) {
+  // Generate waveform bars with pseudo-random heights
+  const bars = Array.from({length: 28}, (_, i) => {
+    const h = 20 + Math.round(Math.abs(Math.sin(i * 0.7 + 1.2) * 55) + Math.abs(Math.cos(i * 1.1) * 25));
+    return `<div class="vp-bar" style="height:${h}%" data-h="${h}"></div>`;
+  }).join('');
+
+  return `<div class="voice-player ${isMe ? 'vp-me' : 'vp-other'}">
+    <button class="vp-play-btn" onclick="toggleVoicePlay(this)">
+      <i class="ti ti-player-play-filled"></i>
+    </button>
+    <div class="vp-body">
+      <div class="vp-bars">${bars}</div>
+      <span class="vp-dur">0:00</span>
+    </div>
+    <audio src="${src}" preload="metadata" style="display:none"></audio>
+  </div>`;
+}
+
+function toggleVoicePlay(btn) {
+  const vp    = btn.closest('.voice-player');
+  const audio = vp.querySelector('audio');
+  const icon  = btn.querySelector('i');
+  const dur   = vp.querySelector('.vp-dur');
+  const bars  = vp.querySelectorAll('.vp-bar');
+
+  // Stop all other players
+  document.querySelectorAll('.voice-player').forEach(other => {
+    if (other === vp) return;
+    const a = other.querySelector('audio');
+    if (!a.paused) {
+      a.pause();
+      other.classList.remove('playing');
+      other.querySelector('i').className = 'ti ti-player-play-filled';
+      other.querySelectorAll('.vp-bar').forEach(b => b.classList.remove('played'));
+    }
+  });
+
+  const updateBars = () => {
+    if (!audio.duration) return;
+    const pct = audio.currentTime / audio.duration;
+    const played = Math.round(pct * bars.length);
+    bars.forEach((b, i) => b.classList.toggle('played', i < played));
+  };
+
+  if (audio.paused) {
+    audio.play().catch(() => showToast('Format audio tidak didukung browser ini'));
+    icon.className = 'ti ti-player-pause-filled';
+    vp.classList.add('playing');
+
+    audio.ontimeupdate = () => {
+      const t = audio.currentTime;
+      dur.textContent = `${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,'0')}`;
+      updateBars();
+    };
+    audio.onended = () => {
+      icon.className = 'ti ti-player-play-filled';
+      vp.classList.remove('playing');
+      dur.textContent = '0:00';
+      bars.forEach(b => b.classList.remove('played'));
+    };
+  } else {
+    audio.pause();
+    icon.className = 'ti ti-player-play-filled';
+    vp.classList.remove('playing');
+  }
+
+  // Show duration when metadata loads
+  if (audio.readyState >= 1 && isFinite(audio.duration)) {
+    const d = audio.duration;
+    dur.textContent = `${Math.floor(d/60)}:${String(Math.floor(d%60)).padStart(2,'0')}`;
+  } else {
+    audio.onloadedmetadata = () => {
+      const d = audio.duration;
+      if (isFinite(d)) dur.textContent = `${Math.floor(d/60)}:${String(Math.floor(d%60)).padStart(2,'0')}`;
+    };
+  }
 }
 
 // ══════════════════════════════════════
@@ -335,29 +421,38 @@ async function handleFileSelect(input) {
 }
 
 // ── Voice recording ──
-let _recStream = null;
-let _recChunks = [];
-let _cancelRec = false;
+let _recStream  = null;
+let _recChunks  = [];
+let _cancelRec  = false;
+let _recMime    = '';
+
+function getSupportedAudioMime() {
+  // Order matters: prefer mp4/aac for iOS Safari compatibility
+  const types = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/ogg'];
+  return types.find(t => { try { return MediaRecorder.isTypeSupported(t); } catch { return false; } }) || '';
+}
 
 async function startRecording() {
   if (isRecording || !currentChat) return;
   try {
     _recStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     _recChunks = []; _cancelRec = false;
-    mediaRecorder = new MediaRecorder(_recStream);
-    mediaRecorder.ondataavailable = e => _recChunks.push(e.data);
+    _recMime = getSupportedAudioMime();
+
+    mediaRecorder = new MediaRecorder(_recStream, _recMime ? { mimeType: _recMime } : {});
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) _recChunks.push(e.data); };
     mediaRecorder.onstop = async () => {
       _recStream.getTracks().forEach(t => t.stop());
-      if (!_cancelRec) {
-        const blob = new Blob(_recChunks, { type:'audio/webm' });
-        if (blob.size > 500) await sendVoice(blob);
+      if (!_cancelRec && _recChunks.length) {
+        const mime = _recMime || mediaRecorder.mimeType || 'audio/webm';
+        const blob = new Blob(_recChunks, { type: mime });
+        if (blob.size > 500) await sendVoice(blob, mime);
       }
       _recStream = null; _recChunks = [];
     };
-    mediaRecorder.start();
+    mediaRecorder.start(250); // collect chunks every 250ms
     isRecording = true; recSeconds = 0;
 
-    // Show recording UI
     document.getElementById('micBtn').style.display = 'none';
     document.getElementById('sendBtn').style.display = 'none';
     document.getElementById('recControls').style.display = 'flex';
@@ -395,10 +490,11 @@ function _finishRecording() {
   if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
 }
 
-async function sendVoice(blob) {
+async function sendVoice(blob, mime) {
   const isGroup = currentChat.type === 'group';
+  const ext = (mime||'').includes('mp4') ? 'm4a' : (mime||'').includes('ogg') ? 'ogg' : 'webm';
   const form = new FormData();
-  form.append('media', blob, 'voice.webm');
+  form.append('media', blob, `voice.${ext}`);
   form.append('type', 'voice');
   if (!isGroup) form.append('receiverId', currentChat.id);
   try {

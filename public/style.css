@@ -248,7 +248,63 @@ body{
   object-fit:cover;display:block;margin-bottom:4px;
 }
 .msg-video{max-width:220px;border-radius:10px;display:block;margin-bottom:4px;}
-.msg-audio{width:200px;height:36px;accent-color:var(--rose);}
+.msg-audio{display:none;} /* hidden — replaced by custom .voice-player */
+
+/* ── Custom Voice Player ── */
+.voice-player{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:16px;
+  min-width:220px;max-width:260px;cursor:default;
+}
+.voice-player.vp-me{background:rgba(0,0,0,.15);}
+.voice-player.vp-other{background:rgba(196,120,138,.08);border:1px solid #F0DCE2;}
+
+.vp-play-btn{
+  width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:transform .15s;
+}
+.vp-me .vp-play-btn{background:rgba(255,255,255,.25);color:#fff;}
+.vp-other .vp-play-btn{background:var(--rose);color:#fff;}
+.vp-play-btn:hover{transform:scale(1.08);}
+.vp-play-btn i{font-size:16px;}
+
+.vp-body{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0;}
+
+.vp-bars{
+  display:flex;align-items:center;gap:2px;height:28px;
+}
+.vp-bar{
+  width:3px;border-radius:3px;flex-shrink:0;
+  transition:background .2s;
+}
+.vp-me .vp-bar{background:rgba(255,255,255,.35);}
+.vp-other .vp-bar{background:var(--rose-mid);}
+
+/* bars animate while playing */
+.voice-player.playing .vp-bar{
+  animation:vp-bounce .6s ease-in-out infinite alternate;
+}
+.voice-player.playing .vp-bar:nth-child(2n){animation-delay:.1s;}
+.voice-player.playing .vp-bar:nth-child(3n){animation-delay:.2s;}
+.voice-player.playing .vp-bar:nth-child(4n){animation-delay:.15s;}
+.voice-player.playing .vp-bar:nth-child(5n){animation-delay:.25s;}
+
+/* bars already listened (progress) */
+.vp-bar.played{opacity:.9;}
+.vp-me .vp-bar.played{background:rgba(255,255,255,.7);}
+.vp-other .vp-bar.played{background:var(--rose);}
+
+@keyframes vp-bounce{
+  from{transform:scaleY(1)}
+  to{transform:scaleY(0.35)}
+}
+
+.vp-dur{
+  font-size:11px;font-weight:500;white-space:nowrap;
+}
+.vp-me .vp-dur{color:rgba(255,255,255,.75);}
+.vp-other .vp-dur{color:var(--text-muted);}
 .msg-file{
   display:flex;align-items:center;gap:8px;padding:8px;
   background:rgba(196,120,138,.08);border-radius:10px;
