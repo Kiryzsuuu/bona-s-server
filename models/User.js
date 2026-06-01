@@ -15,6 +15,7 @@ const userSchema = new mongoose.Schema({
     default: 'offline'
   },
   lastSeen: { type: Date, default: Date.now },
+  theme: { type: String, default: 'bonah' },
   resetPasswordToken: { type: String, default: null },
   resetPasswordExpires: { type: Date, default: null }
 }, { timestamps: true });

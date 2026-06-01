@@ -12,7 +12,8 @@ const messageSchema = new mongoose.Schema({
   },
   mediaUrl: { type: String, default: null },
   fileName: { type: String, default: null },
-  isRead: { type: Boolean, default: false }
+  isRead: { type: Boolean, default: false },
+  edited: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Message', messageSchema);

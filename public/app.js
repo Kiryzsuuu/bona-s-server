@@ -2,6 +2,13 @@
 const token = localStorage.getItem('bonah_token');
 if (!token) window.location.replace('/login.html');
 
+// ── Apply theme immediately (sebelum render apapun) ──
+(function() {
+  const u = JSON.parse(localStorage.getItem('bonah_user') || '{}');
+  const t = u.theme || localStorage.getItem('bonah_theme') || 'bonah';
+  document.documentElement.setAttribute('data-theme', t);
+})();
+
 let currentUser   = JSON.parse(localStorage.getItem('bonah_user') || '{}');
 let currentChat   = null;   // { type:'personal'|'group', id, name, picture }
 let conversations = [];
@@ -264,14 +271,29 @@ function buildBubble(msg, isGroup) {
     ? `<div class="m-sender">${escHtml(msg.sender?.name||'')}</div>` : '';
   const tick = isMe ? `<i class="ti ti-checks tick ${msg.isRead?'read':'me'}"></i>` : '';
 
-  // Voice player sudah punya tampilannya sendiri, tidak butuh .bubble wrapper
+  const editedLabel = msg.edited ? `<span class="msg-edited">(diedit)</span>` : '';
+
   if (msg.type === 'voice' && msg.mediaUrl) {
     wrap.innerHTML = `${senderLine}${body}
       <div class="b-meta"><span class="b-time ${isMe?'me':'ot'}">${time}</span>${tick}</div>`;
   } else {
     wrap.innerHTML = `${senderLine}<div class="bubble ${isMe?'me':'other'}">${body}</div>
-      <div class="b-meta"><span class="b-time ${isMe?'me':'ot'}">${time}</span>${tick}</div>`;
+      <div class="b-meta"><span class="b-time ${isMe?'me':'ot'}">${time}</span>${editedLabel}${tick}</div>`;
   }
+
+  // Long-press / right-click context menu (only my text messages for edit, all my messages for delete)
+  if (isMe) {
+    const addCtx = (e) => {
+      e.preventDefault();
+      showMsgContextMenu(e, msg._id, msg.type, wrap);
+    };
+    let pressTimer;
+    wrap.addEventListener('contextmenu', addCtx);
+    wrap.addEventListener('touchstart', () => { pressTimer = setTimeout(() => { showMsgContextMenu({ clientX: 0, clientY: 0, touch: true }, msg._id, msg.type, wrap); }, 600); }, { passive: true });
+    wrap.addEventListener('touchend', () => clearTimeout(pressTimer));
+    wrap.addEventListener('touchmove', () => clearTimeout(pressTimer));
+  }
+
   return wrap;
 }
 
@@ -588,6 +610,21 @@ function connectSocket() {
   socket.on('user-stop-typing', ({ senderId }) => {
     if (currentChat?.type==='personal' && currentChat.id === senderId) showTyping(false);
   });
+  socket.on('message-edited', ({ _id, content }) => {
+    const wrap = document.querySelector(`.mw[data-msg-id="${_id}"]`);
+    if (wrap) {
+      const bubble = wrap.querySelector('.bubble');
+      if (bubble) bubble.textContent = content;
+      const meta = wrap.querySelector('.b-meta');
+      if (meta && !meta.querySelector('.msg-edited'))
+        meta.insertAdjacentHTML('beforeend', '<span class="msg-edited">(diedit)</span>');
+    }
+  });
+
+  socket.on('message-deleted', ({ _id }) => {
+    document.querySelector(`.mw[data-msg-id="${_id}"]`)?.remove();
+  });
+
   socket.on('messages-read', () => {
     document.querySelectorAll('.mw.me .tick').forEach(el => el.classList.add('read'));
   });
@@ -1129,16 +1166,104 @@ function logout() {
   localStorage.clear(); window.location.replace('/login.html');
 }
 
+// ══════════════════════════════════════
+//  EDIT / DELETE MESSAGE
+// ══════════════════════════════════════
+let _ctxMsgId   = null;
+let _ctxMsgType = null;
+let _ctxMsgWrap = null;
+
+function showMsgContextMenu(e, msgId, msgType, wrap) {
+  _ctxMsgId = msgId; _ctxMsgType = msgType; _ctxMsgWrap = wrap;
+  const ctx = document.getElementById('msgCtx');
+  document.getElementById('ctxEdit').style.display = msgType === 'text' ? '' : 'none';
+
+  if (e.touch) {
+    // center on mobile
+    const rect = wrap.getBoundingClientRect();
+    ctx.style.left = Math.max(8, rect.left) + 'px';
+    ctx.style.top  = (rect.top - 80) + 'px';
+  } else {
+    ctx.style.left = Math.min(e.clientX, window.innerWidth - 160) + 'px';
+    ctx.style.top  = Math.min(e.clientY, window.innerHeight - 100) + 'px';
+  }
+  ctx.classList.add('show');
+}
+
+function startEditMsg() {
+  document.getElementById('msgCtx').classList.remove('show');
+  if (!_ctxMsgWrap) return;
+  const bubble = _ctxMsgWrap.querySelector('.bubble');
+  if (!bubble) return;
+  const original = bubble.textContent.trim();
+  bubble.innerHTML = `<input class="bubble-edit-inp" id="editInp" value="${escHtml(original)}" onkeydown="if(event.key==='Enter')saveEdit();if(event.key==='Escape')cancelEdit();">
+    <div class="bubble-edit-actions">
+      <button class="bea-btn bea-save" onclick="saveEdit()">Simpan</button>
+      <button class="bea-btn bea-cancel" onclick="cancelEdit()">Batal</button>
+    </div>`;
+  document.getElementById('editInp').focus();
+  document.getElementById('editInp').dataset.orig = original;
+}
+
+async function saveEdit() {
+  const inp = document.getElementById('editInp');
+  if (!inp) return;
+  const newContent = inp.value.trim();
+  if (!newContent) return;
+
+  try {
+    const res = await fetch(`/api/messages/${_ctxMsgId}`, {
+      method: 'PUT',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: newContent })
+    });
+    if (!res.ok) throw new Error('Gagal');
+    const bubble = _ctxMsgWrap.querySelector('.bubble');
+    bubble.textContent = newContent;
+    // Add edited label
+    const meta = _ctxMsgWrap.querySelector('.b-meta');
+    if (meta && !meta.querySelector('.msg-edited')) {
+      meta.insertAdjacentHTML('beforeend', '<span class="msg-edited">(diedit)</span>');
+    }
+    showToast('Pesan diedit ✓');
+  } catch {
+    cancelEdit();
+    showToast('Gagal mengedit pesan');
+  }
+}
+
+function cancelEdit() {
+  const inp = document.getElementById('editInp');
+  if (!inp || !_ctxMsgWrap) return;
+  const bubble = _ctxMsgWrap.querySelector('.bubble');
+  if (bubble) bubble.textContent = inp.dataset.orig || '';
+}
+
+async function deleteMsg() {
+  document.getElementById('msgCtx').classList.remove('show');
+  if (!_ctxMsgId || !_ctxMsgWrap) return;
+  if (!confirm('Hapus pesan ini?')) return;
+
+  try {
+    const res = await fetch(`/api/messages/${_ctxMsgId}`, { method: 'DELETE', headers: auth() });
+    if (!res.ok) throw new Error('Gagal');
+    _ctxMsgWrap.remove();
+    showToast('Pesan dihapus');
+  } catch {
+    showToast('Gagal menghapus pesan');
+  }
+}
+
 // ── Outside click handlers ──
 document.addEventListener('click', e => {
   if (!e.target.closest('.search-wrap') && !e.target.closest('.search-results'))
     document.getElementById('searchResults').classList.remove('show');
-  if (!e.target.closest('.bg-btn') && !e.target.closest('.bg-panel'))
-    document.getElementById('bgPanel').classList.remove('show');
   if (!e.target.closest('.ep-toggle-btn') && !e.target.closest('.emoji-picker-panel'))
     closeEmojiPicker();
   if (!e.target.closest('.modal-card') && e.target.closest('#createGroupModal'))
     closeCreateGroupModal();
+  if (!e.target.closest('.msg-ctx') && !e.target.closest('.mw'))
+    document.getElementById('msgCtx')?.classList.remove('show');
 });
 
 // ── Start ──

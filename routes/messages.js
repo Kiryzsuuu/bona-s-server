@@ -171,4 +171,49 @@ router.post('/send', auth, mediaUpload.single('media'), async (req, res) => {
   }
 });
 
+// PUT /api/messages/:id — edit message
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const msg = await Message.findById(req.params.id);
+    if (!msg) return res.status(404).json({ message: 'Pesan tidak ditemukan' });
+    if (msg.sender.toString() !== req.user._id.toString())
+      return res.status(403).json({ message: 'Bukan pesanmu' });
+    if (msg.type !== 'text') return res.status(400).json({ message: 'Hanya pesan teks yang bisa diedit' });
+
+    msg.content = req.body.content || msg.content;
+    msg.edited = true;
+    await msg.save();
+
+    const io = req.app.get('io');
+    const connectedUsers = req.app.get('connectedUsers');
+    const rSock = connectedUsers.get(msg.receiver.toString());
+    if (rSock) io.to(rSock).emit('message-edited', { _id: msg._id, content: msg.content, conversationId: msg.conversationId });
+
+    res.json({ message: 'Pesan berhasil diedit', msg });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// DELETE /api/messages/:id — delete message
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const msg = await Message.findById(req.params.id);
+    if (!msg) return res.status(404).json({ message: 'Pesan tidak ditemukan' });
+    if (msg.sender.toString() !== req.user._id.toString())
+      return res.status(403).json({ message: 'Bukan pesanmu' });
+
+    await msg.deleteOne();
+
+    const io = req.app.get('io');
+    const connectedUsers = req.app.get('connectedUsers');
+    const rSock = connectedUsers.get(msg.receiver.toString());
+    if (rSock) io.to(rSock).emit('message-deleted', { _id: msg._id, conversationId: msg.conversationId });
+
+    res.json({ message: 'Pesan berhasil dihapus' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;

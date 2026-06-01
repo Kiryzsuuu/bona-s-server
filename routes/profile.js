@@ -35,7 +35,7 @@ router.get('/', auth, async (req, res) => {
 // PUT /api/profile  (name, status, about, background, onlineStatus)
 router.put('/', auth, async (req, res) => {
   try {
-    const { name, status, about, background, onlineStatus } = req.body;
+    const { name, status, about, background, onlineStatus, theme } = req.body;
     const updates = {};
     if (name !== undefined) updates.name = name.trim();
     if (status !== undefined) updates.status = status;
@@ -44,6 +44,9 @@ router.put('/', auth, async (req, res) => {
     const validStatuses = ['online', 'away', 'busy', 'offline'];
     if (onlineStatus !== undefined && validStatuses.includes(onlineStatus))
       updates.onlineStatus = onlineStatus;
+    const validThemes = ['bonah','dark','ios','pacman','ocean','forest','sunset','midnight','sakura'];
+    if (theme !== undefined && validThemes.includes(theme))
+      updates.theme = theme;
 
     const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true }).select('-password');
     res.json({ message: 'Profil berhasil diperbarui', user });
