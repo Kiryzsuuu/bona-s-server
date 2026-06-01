@@ -13,6 +13,8 @@ body{
   font-family:var(--font-text);background:var(--body-bg,#F0E4E8);
   display:flex;justify-content:center;align-items:stretch;
   height:100vh;height:100dvh;overflow:hidden;padding:0;
+  padding-left:env(safe-area-inset-left);
+  padding-right:env(safe-area-inset-right);
 }
 
 /* ── Loading Screen ── */
@@ -494,6 +496,22 @@ body{
   .mw{max-width:82%;}
   .emoji-row{gap:3px;padding:5px 10px 0;}
   .emoji-chip{padding:3px 7px;font-size:12px;}
+
+  /* Input bar: kurangi padding, tambah safe area untuk layar dengan notch/gesture bar */
+  .input-bar{
+    padding:10px 12px;
+    padding-right:max(12px,env(safe-area-inset-right));
+    padding-left:max(12px,env(safe-area-inset-left));
+    padding-bottom:max(10px,env(safe-area-inset-bottom));
+    gap:8px;
+  }
+  .send-btn{width:38px;height:38px;}
+  .send-btn i{font-size:16px;}
+
+  /* Chat header: tambah safe area atas */
+  .chat-header{
+    padding-top:max(14px,calc(14px + env(safe-area-inset-top)));
+  }
 }
 
 /* Notif permission banner */
