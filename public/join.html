@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gabung Grup – Bonah Server</title>
+  <link rel="icon" type="image/png" href="/image%20(7).png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="auth.css">
+  <style>
+    .grp-join-card{text-align:center;padding:28px;}
+    .grp-join-pic{width:80px;height:80px;border-radius:50%;background:var(--lav-light,#EDE9F8);color:var(--lav,#9B8EC4);font-size:28px;font-family:'Cormorant Garamond',serif;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;overflow:hidden;border:2px solid #E8DDF8;}
+    .grp-join-pic img{width:100%;height:100%;object-fit:cover;}
+    .grp-join-name{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--text-main);margin-bottom:4px;}
+    .grp-join-desc{font-size:13px;color:var(--text-muted);margin-bottom:8px;}
+    .grp-join-meta{font-size:12px;color:var(--text-hint);margin-bottom:24px;}
+    .already-badge{display:inline-flex;align-items:center;gap:6px;background:#F0FBF0;color:#3A7A3A;border:1px solid #B8E8B8;border-radius:20px;padding:6px 16px;font-size:13px;margin-bottom:16px;}
+  </style>
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="auth-brand">
+      <div class="logo">🦋</div>
+      <h1>Bonah Server</h1>
+    </div>
+    <div class="auth-card grp-join-card" id="joinCard">
+      <div style="color:var(--text-hint);font-size:14px;">Memuat...</div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('bonah_token');
+    if (!token) {
+      localStorage.setItem('bonah_join_redirect', location.href);
+      window.location.replace('/login.html');
+    }
+
+    const joinToken = new URLSearchParams(location.search).get('token');
+    if (!joinToken) { document.getElementById('joinCard').innerHTML = '<p style="color:#B94A4A">Link tidak valid</p>'; }
+
+    async function loadGroup() {
+      const res = await fetch(`/api/groups/join/${joinToken}`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (!res.ok) {
+        document.getElementById('joinCard').innerHTML = `<p style="color:#B94A4A">${data.message}</p><br><a href="/" style="color:var(--rose)">Kembali ke chat</a>`;
+        return;
+      }
+      const g = data.group;
+      const avHtml = g.picture ? `<img src="${g.picture}" alt="">` : g.name[0].toUpperCase();
+      const card = document.getElementById('joinCard');
+      card.innerHTML = `
+        <div class="grp-join-pic">${avHtml}</div>
+        <div class="grp-join-name">${esc(g.name)}</div>
+        ${g.description ? `<div class="grp-join-desc">${esc(g.description)}</div>` : ''}
+        <div class="grp-join-meta">${g.memberCount} anggota</div>
+        ${data.already ? '<div class="already-badge"><i class="ti ti-check"></i> Kamu sudah bergabung</div><br>' : ''}
+        <button class="btn-primary" id="joinBtn" onclick="joinGroup()" ${data.already ? '' : ''}>
+          ${data.already ? 'Buka Grup' : 'Bergabung ke Grup'}
+        </button>
+        <div class="auth-link" style="margin-top:12px"><a href="/">Kembali ke Chat</a></div>
+      `;
+      if (data.already) {
+        document.getElementById('joinBtn').onclick = () => window.location.replace(`/?group=${g._id}`);
+      }
+    }
+
+    async function joinGroup() {
+      const btn = document.getElementById('joinBtn');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Bergabung...';
+      try {
+        const res = await fetch(`/api/groups/join/${joinToken}`, {
+          method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('bonah_token')}`, 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (res.ok) window.location.replace(`/?group=${data.groupId}`);
+        else { btn.disabled = false; btn.textContent = 'Coba Lagi'; alert(data.message); }
+      } catch { btn.disabled = false; btn.textContent = 'Coba Lagi'; }
+    }
+
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    if (joinToken) loadGroup();
+  </script>
+</body>
+</html>

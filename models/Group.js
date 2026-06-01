@@ -11,7 +11,8 @@ const groupSchema = new mongoose.Schema({
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   background: { type: String, default: '#FBF0F3' },
   lastMessage: { type: String, default: '' },
-  lastMessageAt: { type: Date, default: Date.now }
+  lastMessageAt: { type: Date, default: Date.now },
+  inviteToken: { type: String, default: null }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Group', groupSchema);

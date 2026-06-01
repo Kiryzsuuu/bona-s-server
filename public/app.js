@@ -794,9 +794,9 @@ function closeGroupInfo() {
 }
 
 function renderGroupInfoPanel() {
-  const g   = activeGroupData;
-  const myId = (currentUser._id || currentUser.id)?.toString();
-  const me   = g.members?.find(m => (m.user?._id || m.user)?.toString() === myId);
+  const g     = activeGroupData;
+  const myId  = (currentUser._id || currentUser.id)?.toString();
+  const me    = g.members?.find(m => (m.user?._id || m.user)?.toString() === myId);
   const isAdmin = me?.role === 'admin';
 
   const pic = document.getElementById('gipPic');
@@ -809,23 +809,86 @@ function renderGroupInfoPanel() {
   document.getElementById('gipMeta').textContent = `${g.members?.length || 0} anggota · Dibuat ${fmtDate(g.createdAt)}`;
   document.getElementById('gipAddMember').style.display = isAdmin ? '' : 'none';
 
+  // Invite link section (visible to all members)
+  document.getElementById('gipInviteSection').style.display = '';
+  document.getElementById('gipResetBtn').style.display = isAdmin ? '' : 'none';
+  loadInviteLink();
+
   const membersEl = document.getElementById('gipMembers');
   membersEl.innerHTML = (g.members || []).map(m => {
-    const u = m.user;
+    const u   = m.user;
     const uid = (u?._id || u)?.toString();
-    const av = u?.profilePicture
+    const av  = u?.profilePicture
       ? `<img src="${u.profilePicture}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" alt="">`
       : (u?.name||'?')[0].toUpperCase();
-    const removeBtn = isAdmin && uid !== myId
-      ? `<i class="ti ti-user-minus gip-member-remove" onclick="removeMember('${uid}')"></i>` : '';
+
+    // Admin actions: promote/demote + remove
+    let actions = '';
+    if (isAdmin && uid !== myId) {
+      const promoteLabel = m.role === 'admin' ? 'Jadikan Anggota' : 'Jadikan Admin';
+      const promoteRole  = m.role === 'admin' ? 'member' : 'admin';
+      actions = `
+        <div style="display:flex;gap:4px;">
+          <i class="ti ti-shield${m.role==='admin'?'-off':'-check'} gip-member-remove" title="${promoteLabel}" onclick="changeMemberRole('${uid}','${promoteRole}','${escHtml(u?.name||'')}')"></i>
+          <i class="ti ti-user-minus gip-member-remove" title="Keluarkan" onclick="removeMember('${uid}')"></i>
+        </div>`;
+    }
+
     return `<div class="gip-member-item">
       <div class="av av-sm">${av}</div>
       <div class="gip-member-info">
-        <div class="gip-member-name">${escHtml(u?.name||'?')}</div>
+        <div class="gip-member-name">${escHtml(u?.name||'?')}${uid===myId?' (Kamu)':''}</div>
         ${m.role==='admin'?'<div class="gip-member-role">Admin</div>':''}
-      </div>${removeBtn}
+      </div>${actions}
     </div>`;
   }).join('');
+}
+
+async function loadInviteLink() {
+  try {
+    const res = await fetch(`/api/groups/${activeGroupData._id}/invite`, { headers: auth() });
+    const data = await res.json();
+    if (res.ok) document.getElementById('gipInviteLink').value = data.link;
+  } catch {}
+}
+
+async function copyInviteLink() {
+  const link = document.getElementById('gipInviteLink').value;
+  if (!link) return;
+  try {
+    await navigator.clipboard.writeText(link);
+    showToast('Link disalin ✓');
+  } catch {
+    document.getElementById('gipInviteLink').select();
+    document.execCommand('copy');
+    showToast('Link disalin ✓');
+  }
+}
+
+async function resetInviteLink() {
+  if (!confirm('Reset link? Link lama tidak bisa dipakai lagi.')) return;
+  const res = await fetch(`/api/groups/${activeGroupData._id}/invite/reset`, { method:'POST', headers: auth() });
+  const data = await res.json();
+  if (res.ok) {
+    document.getElementById('gipInviteLink').value = data.link;
+    showToast('Link berhasil direset ✓');
+  }
+}
+
+async function changeMemberRole(userId, newRole, userName) {
+  const label = newRole === 'admin' ? 'jadikan admin' : 'turunkan dari admin';
+  if (!confirm(`${label} ${userName}?`)) return;
+  const res = await fetch(`/api/groups/${activeGroupData._id}/members/${userId}/role`, {
+    method: 'PUT',
+    headers: { ...auth(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: newRole })
+  });
+  const data = await res.json();
+  showToast(data.message);
+  if (res.ok) {
+    const r2 = await fetch(`/api/groups/${activeGroupData._id}`, { headers: auth() });
+    if (r2.ok) { activeGroupData = await r2.json(); renderGroupInfoPanel(); }
+  }
 }
 
 async function uploadGroupPic(input) {

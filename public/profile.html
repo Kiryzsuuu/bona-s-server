@@ -11,33 +11,48 @@
 </head>
 <body>
   <div class="profile-wrap">
-    <!-- Left Panel -->
+
+    <!-- ── Left Panel ── -->
     <div class="pf-left">
-      <div class="pf-avatar-wrap" onclick="document.getElementById('picInput').click()">
-        <div class="pf-avatar" id="pfAvatar">K</div>
-        <div class="pf-avatar-edit"><i class="ti ti-camera"></i></div>
+
+      <!-- Mobile top bar (back + title) -->
+      <div class="pf-mob-topbar">
+        <button class="pf-mob-back" onclick="window.location.replace('/')">
+          <i class="ti ti-arrow-left"></i>
+        </button>
+        <span>My Profile</span>
       </div>
-      <input type="file" id="picInput" accept="image/*">
 
-      <div class="pf-name" id="pfName">Kamu</div>
-      <div class="pf-email" id="pfEmail">email@kamu.com</div>
-      <div class="pf-status-badge"><span class="dot"></span><span id="pfStatusBadge">Online</span></div>
+      <!-- Avatar + info -->
+      <div class="pf-identity">
+        <div class="pf-avatar-wrap" onclick="document.getElementById('picInput').click()">
+          <div class="pf-avatar" id="pfAvatar">K</div>
+          <div class="pf-avatar-edit"><i class="ti ti-camera"></i></div>
+        </div>
+        <input type="file" id="picInput" accept="image/*">
+        <div class="pf-identity-info">
+          <div class="pf-name" id="pfName">Kamu</div>
+          <div class="pf-email" id="pfEmail">email@kamu.com</div>
+          <div class="pf-status-badge"><span class="dot"></span><span id="pfStatusBadge">Online</span></div>
+        </div>
+      </div>
 
+      <!-- Navigation -->
       <nav class="pf-nav">
-        <div class="pf-nav-item active" onclick="showTab('info')">
-          <i class="ti ti-user"></i> Profil
+        <div class="pf-nav-item active" data-tab="info" onclick="showTab('info',this)">
+          <i class="ti ti-user"></i><span>Profil</span>
         </div>
-        <div class="pf-nav-item" onclick="showTab('status')">
-          <i class="ti ti-message-circle"></i> Status & About
+        <div class="pf-nav-item" data-tab="status" onclick="showTab('status',this)">
+          <i class="ti ti-message-circle"></i><span>Status & About</span>
         </div>
-        <div class="pf-nav-item" onclick="showTab('email')">
-          <i class="ti ti-mail"></i> Ubah Email
+        <div class="pf-nav-item" data-tab="email" onclick="showTab('email',this)">
+          <i class="ti ti-mail"></i><span>Ubah Email</span>
         </div>
-        <div class="pf-nav-item" onclick="showTab('password')">
-          <i class="ti ti-lock"></i> Ubah Password
+        <div class="pf-nav-item" data-tab="password" onclick="showTab('password',this)">
+          <i class="ti ti-lock"></i><span>Ubah Password</span>
         </div>
-        <div class="pf-nav-item" onclick="showTab('background')">
-          <i class="ti ti-photo"></i> Background Chat
+        <div class="pf-nav-item" data-tab="background" onclick="showTab('background',this)">
+          <i class="ti ti-photo"></i><span>Background Chat</span>
         </div>
       </nav>
 
@@ -46,8 +61,8 @@
       </div>
     </div>
 
-    <!-- Right Panel -->
-    <div class="pf-right">
+    <!-- ── Right Panel ── -->
+    <div class="pf-right" id="pfRight">
 
       <!-- Tab: Profil Info -->
       <div class="tab-pane active" id="tab-info">
@@ -76,7 +91,7 @@
       <!-- Tab: Status & About -->
       <div class="tab-pane" id="tab-status">
         <div class="pf-section-title">Status & About 💬</div>
-        <div class="pf-section-sub">Ceritakan sedikit tentang dirimu kepada teman-temanmu.</div>
+        <div class="pf-section-sub">Ceritakan sedikit tentang dirimu.</div>
         <div class="alert err" id="statusErr"></div>
         <div class="alert ok" id="statusOk"></div>
         <form id="statusForm">
@@ -107,7 +122,7 @@
             <label>Password Saat Ini</label>
             <div class="inp-icon-wrap">
               <input type="password" id="emailPass" placeholder="Konfirmasi dengan password" required>
-              <i class="ti ti-eye eye" onclick="toggleEye(this, 'emailPass')"></i>
+              <i class="ti ti-eye eye" onclick="toggleEye(this,'emailPass')"></i>
             </div>
           </div>
           <button type="submit" class="btn-save" id="emailBtn">Update Email</button>
@@ -117,7 +132,7 @@
       <!-- Tab: Ubah Password -->
       <div class="tab-pane" id="tab-password">
         <div class="pf-section-title">Ubah Password 🔑</div>
-        <div class="pf-section-sub">Pastikan password barumu minimal 6 karakter dan mudah kamu ingat.</div>
+        <div class="pf-section-sub">Pastikan password barumu minimal 6 karakter.</div>
         <div class="alert err" id="passErr"></div>
         <div class="alert ok" id="passOk"></div>
         <form id="passForm">
@@ -125,14 +140,14 @@
             <label>Password Saat Ini</label>
             <div class="inp-icon-wrap">
               <input type="password" id="passCurrent" placeholder="Password lama" required>
-              <i class="ti ti-eye eye" onclick="toggleEye(this, 'passCurrent')"></i>
+              <i class="ti ti-eye eye" onclick="toggleEye(this,'passCurrent')"></i>
             </div>
           </div>
           <div class="form-group">
             <label>Password Baru</label>
             <div class="inp-icon-wrap">
               <input type="password" id="passNew" placeholder="Min. 6 karakter" required minlength="6">
-              <i class="ti ti-eye eye" onclick="toggleEye(this, 'passNew')"></i>
+              <i class="ti ti-eye eye" onclick="toggleEye(this,'passNew')"></i>
             </div>
           </div>
           <div class="form-group">
@@ -146,9 +161,9 @@
       <!-- Tab: Background -->
       <div class="tab-pane" id="tab-background">
         <div class="pf-section-title">Background Chat 🎨</div>
-        <div class="pf-section-sub">Pilih warna latar belakang chat favoritmu — tersimpan di semua perangkat.</div>
+        <div class="pf-section-sub">Pilih warna latar belakang chat favoritmu.</div>
         <div class="alert ok" id="bgOk"></div>
-        <div class="bg-grid" id="bgGrid">
+        <div class="bg-grid">
           <div class="bg-swatch" style="background:#FBF0F3;" data-bg="#FBF0F3" onclick="selectBg(this)"><span>Rose Blush</span></div>
           <div class="bg-swatch" style="background:#F0EDF8;" data-bg="#F0EDF8" onclick="selectBg(this)"><span>Lavender</span></div>
           <div class="bg-swatch" style="background:#FDF5E6;" data-bg="#FDF5E6" onclick="selectBg(this)"><span>Vanilla</span></div>

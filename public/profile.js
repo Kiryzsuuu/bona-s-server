@@ -48,11 +48,15 @@ function renderProfile(u) {
 }
 
 // ── Tab navigation ──
-function showTab(name) {
+function showTab(name, el) {
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.pf-nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  event.currentTarget.classList.add('active');
+  (el || event?.currentTarget)?.classList.add('active');
+  // On mobile, scroll right panel into view
+  if (window.innerWidth <= 640) {
+    document.getElementById('pfRight')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 // ── Toggle password eye ──

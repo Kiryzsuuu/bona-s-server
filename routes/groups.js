@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const auth = require('../middleware/auth');
 const Group = require('../models/Group');
 const GroupMessage = require('../models/GroupMessage');
@@ -256,6 +257,116 @@ router.post('/:id/leave', auth, async (req, res) => {
     const io = req.app.get('io');
     io.to(`group:${group._id}`).emit('group-updated', group);
     res.json({ message: 'Berhasil keluar dari grup' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PUT /api/groups/:id/members/:userId/role — promote/demote admin
+router.put('/:id/members/:userId/role', auth, async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.id);
+    if (!group) return res.status(404).json({ message: 'Grup tidak ditemukan' });
+    const admin = group.members.find(m => m.user.toString() === req.user._id.toString());
+    if (!admin || admin.role !== 'admin') return res.status(403).json({ message: 'Hanya admin' });
+
+    const { role } = req.body;
+    if (!['admin','member'].includes(role)) return res.status(400).json({ message: 'Role tidak valid' });
+
+    const target = group.members.find(m => m.user.toString() === req.params.userId);
+    if (!target) return res.status(404).json({ message: 'Anggota tidak ditemukan' });
+
+    target.role = role;
+    const targetUser = await User.findById(req.params.userId).select('name');
+    const action = role === 'admin' ? 'dijadikan admin' : 'diturunkan dari admin';
+    await new GroupMessage({
+      group: group._id, sender: req.user._id,
+      content: `${req.user.name} menjadikan ${targetUser?.name} ${action}`, type: 'system'
+    }).save();
+    await group.save();
+
+    const io = req.app.get('io');
+    io.to(`group:${group._id}`).emit('group-updated', group);
+    res.json({ message: `${targetUser?.name} berhasil ${action}` });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/groups/:id/invite — get or create invite link
+router.get('/:id/invite', auth, async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.id);
+    if (!group) return res.status(404).json({ message: 'Grup tidak ditemukan' });
+    const isMember = group.members.some(m => m.user.toString() === req.user._id.toString());
+    if (!isMember) return res.status(403).json({ message: 'Bukan anggota' });
+
+    if (!group.inviteToken) {
+      group.inviteToken = crypto.randomBytes(16).toString('hex');
+      await group.save();
+    }
+    const link = `${process.env.APP_URL || 'http://localhost:3000'}/join.html?token=${group.inviteToken}`;
+    res.json({ link, token: group.inviteToken });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST /api/groups/:id/invite/reset — reset invite link (admin only)
+router.post('/:id/invite/reset', auth, async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.id);
+    if (!group) return res.status(404).json({ message: 'Grup tidak ditemukan' });
+    const admin = group.members.find(m => m.user.toString() === req.user._id.toString());
+    if (!admin || admin.role !== 'admin') return res.status(403).json({ message: 'Hanya admin' });
+    group.inviteToken = crypto.randomBytes(16).toString('hex');
+    await group.save();
+    const link = `${process.env.APP_URL || 'http://localhost:3000'}/join.html?token=${group.inviteToken}`;
+    res.json({ link, token: group.inviteToken });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/groups/join/:token — preview group before joining
+router.get('/join/:token', auth, async (req, res) => {
+  try {
+    const group = await Group.findOne({ inviteToken: req.params.token })
+      .select('name description picture members');
+    if (!group) return res.status(404).json({ message: 'Link tidak valid atau sudah direset' });
+    const already = group.members.some(m => m.user.toString() === req.user._id.toString());
+    res.json({ group: { _id: group._id, name: group.name, description: group.description, picture: group.picture, memberCount: group.members.length }, already });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST /api/groups/join/:token — join group via invite link
+router.post('/join/:token', auth, async (req, res) => {
+  try {
+    const group = await Group.findOne({ inviteToken: req.params.token });
+    if (!group) return res.status(404).json({ message: 'Link tidak valid atau sudah direset' });
+    const already = group.members.some(m => m.user.toString() === req.user._id.toString());
+    if (already) return res.json({ message: 'Kamu sudah menjadi anggota', groupId: group._id });
+
+    group.members.push({ user: req.user._id, role: 'member' });
+    await new GroupMessage({
+      group: group._id, sender: req.user._id,
+      content: `${req.user.name} bergabung melalui tautan undangan`, type: 'system'
+    }).save();
+    group.lastMessage = `${req.user.name} bergabung`;
+    group.lastMessageAt = new Date();
+    await group.save();
+
+    const io = req.app.get('io');
+    const connectedUsers = req.app.get('connectedUsers');
+    const s = connectedUsers.get(req.user._id.toString());
+    if (s) {
+      io.to(s).emit('group-added', group);
+      io.sockets.sockets.get(s)?.join(`group:${group._id}`);
+    }
+    io.to(`group:${group._id}`).emit('group-updated', group);
+    res.json({ message: `Berhasil bergabung ke "${group.name}"`, groupId: group._id });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

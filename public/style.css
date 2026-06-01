@@ -655,6 +655,18 @@ body{
 .gip-action-item i{font-size:17px;}
 
 .gip-add-member-wrap{margin-top:10px;}
+
+/* Invite link */
+.gip-invite-wrap{margin-top:8px;}
+.gip-invite-btn{
+  background:var(--rose-light);border:1px solid var(--rose-mid);
+  border-radius:20px;padding:6px 14px;font-size:12px;color:var(--rose-deep);
+  cursor:pointer;font-family:'DM Sans',sans-serif;
+  display:inline-flex;align-items:center;gap:5px;transition:background .15s;
+}
+.gip-invite-btn:hover{background:#EDD0D8;}
+.gip-invite-reset{background:#FFF0F0;border-color:#F5C0C0;color:#B94A4A;}
+.gip-invite-reset:hover{background:#FFE0E0;}
 .gip-search-inp{
   width:100%;background:#F5E6EA;border:1.5px solid transparent;border-radius:12px;
   padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;

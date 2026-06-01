@@ -89,6 +89,20 @@
         <div class="gip-members" id="gipMembers"></div>
       </div>
 
+      <!-- Invite link section -->
+      <div class="gip-section" id="gipInviteSection" style="display:none">
+        <div class="gip-section-title">Tautan Undangan</div>
+        <div class="gip-invite-wrap">
+          <input type="text" class="gip-search-inp" id="gipInviteLink" readonly placeholder="Memuat...">
+          <div style="display:flex;gap:6px;margin-top:8px;">
+            <button class="gip-invite-btn" onclick="copyInviteLink()"><i class="ti ti-copy"></i> Salin</button>
+            <button class="gip-invite-btn gip-invite-reset" id="gipResetBtn" onclick="resetInviteLink()" style="display:none">
+              <i class="ti ti-refresh"></i> Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="gip-actions" id="gipActions">
         <div class="gip-action-item" id="gipAddMember" style="display:none" onclick="showAddMemberInPanel()">
           <i class="ti ti-user-plus"></i> Tambah Anggota
@@ -159,25 +173,11 @@
           <div class="h-status" id="hStatus">–</div>
         </div>
         <div class="h-actions">
-          <button class="bg-btn" onclick="toggleBgPanel()"><i class="ti ti-photo"></i> <span>Ganti BG</span></button>
           <i class="ti ti-info-circle" id="hInfoIcon" title="Info" onclick="openGroupInfo()"></i>
         </div>
       </div>
 
-      <!-- BG Panel -->
-      <div class="bg-panel" id="bgPanel">
-        <div class="bp-title">Pilih latar belakang</div>
-        <div class="bg-options">
-          <div class="bg-opt sel" style="background:#FBF0F3;" data-bg="#FBF0F3" onclick="setBg(this)"><span>Rose Blush</span></div>
-          <div class="bg-opt" style="background:#F0EDF8;" data-bg="#F0EDF8" onclick="setBg(this)"><span>Lavender</span></div>
-          <div class="bg-opt" style="background:#FDF5E6;" data-bg="#FDF5E6" onclick="setBg(this)"><span>Vanilla</span></div>
-          <div class="bg-opt" style="background:#E8F0F5;" data-bg="#E8F0F5" onclick="setBg(this)"><span>Sky Mist</span></div>
-          <div class="bg-opt" style="background:#F0F5E8;" data-bg="#F0F5E8" onclick="setBg(this)"><span>Sage</span></div>
-          <div class="bg-opt" style="background:#F5F0F8;" data-bg="#F5F0F8" onclick="setBg(this)"><span>Dusty Lilac</span></div>
-          <div class="bg-opt" style="background:#2D1F2A;" data-bg="#2D1F2A" onclick="setBg(this)"><span class="dark-label">Malam Gelap</span></div>
-          <div class="bg-opt" style="background:#1E2A2E;" data-bg="#1E2A2E" onclick="setBg(this)"><span class="dark-label">Emerald Night</span></div>
-        </div>
-      </div>
+      <!-- BG panel removed — now in My Profile -->
 
       <!-- Messages -->
       <div class="msg-area" id="msgArea"></div>
