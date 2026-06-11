@@ -7,13 +7,19 @@ const messageSchema = new mongoose.Schema({
   content: { type: String, default: '' },
   type: {
     type: String,
-    enum: ['text', 'image', 'voice', 'video', 'file'],
+    enum: ['text', 'image', 'voice', 'video', 'file', 'location'],
     default: 'text'
   },
   mediaUrl: { type: String, default: null },
   fileName: { type: String, default: null },
   isRead: { type: Boolean, default: false },
-  edited: { type: Boolean, default: false }
+  edited: { type: Boolean, default: false },
+  location: {
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null },
+    live: { type: Boolean, default: false },
+    expiresAt: { type: Date, default: null }
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Message', messageSchema);

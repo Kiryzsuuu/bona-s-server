@@ -216,4 +216,71 @@ router.delete('/:id', auth, async (req, res) => {
   }
 });
 
+// POST /api/messages/location — kirim lokasi (sekali atau live)
+router.post('/location', auth, async (req, res) => {
+  try {
+    const { receiverId, lat, lng, live } = req.body;
+    if (!receiverId || lat == null || lng == null)
+      return res.status(400).json({ message: 'receiverId, lat, lng wajib' });
+
+    const expiresAt = live ? new Date(Date.now() + 15 * 60 * 1000) : null; // live = 15 menit
+    const cid = convId(req.user._id, receiverId);
+    const msg = await new Message({
+      conversationId: cid,
+      sender: req.user._id,
+      receiver: receiverId,
+      content: live ? 'Lokasi live' : 'Lokasi',
+      type: 'location',
+      location: { lat, lng, live: !!live, expiresAt }
+    }).save();
+
+    await msg.populate('sender', 'name profilePicture');
+
+    const io = req.app.get('io');
+    const connectedUsers = req.app.get('connectedUsers');
+    const rSock = connectedUsers.get(receiverId.toString());
+    if (rSock) io.to(rSock).emit('new-message', msg);
+
+    sendPushToUser(receiverId, {
+      title: req.user.name,
+      body: live ? '📍 Berbagi lokasi live' : '📍 Mengirim lokasi',
+      icon: req.user.profilePicture || '/image%20(7).png',
+      tag: msg.conversationId,
+      data: { url: '/?chat=' + req.user._id }
+    }).catch(() => {});
+
+    res.status(201).json(msg);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PATCH /api/messages/:id/location — update koordinat live location
+router.patch('/:id/location', auth, async (req, res) => {
+  try {
+    const { lat, lng } = req.body;
+    const msg = await Message.findById(req.params.id);
+    if (!msg) return res.status(404).json({ message: 'Pesan tidak ditemukan' });
+    if (msg.sender.toString() !== req.user._id.toString())
+      return res.status(403).json({ message: 'Bukan pesanmu' });
+    if (msg.type !== 'location' || !msg.location?.live)
+      return res.status(400).json({ message: 'Bukan pesan live location' });
+    if (msg.location.expiresAt && new Date() > msg.location.expiresAt)
+      return res.status(410).json({ message: 'Live location sudah berakhir' });
+
+    msg.location.lat = lat;
+    msg.location.lng = lng;
+    await msg.save();
+
+    const io = req.app.get('io');
+    const connectedUsers = req.app.get('connectedUsers');
+    const rSock = connectedUsers.get(msg.receiver.toString());
+    if (rSock) io.to(rSock).emit('location-update', { msgId: msg._id, lat, lng });
+
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;

@@ -264,6 +264,8 @@ function buildBubble(msg, isGroup) {
     body = `<video class="msg-video" controls src="${msg.mediaUrl}"></video>`;
   } else if (msg.type==='file' && msg.mediaUrl) {
     body = `<a class="msg-file" href="${msg.mediaUrl}" download="${escHtml(msg.fileName||'file')}" target="_blank"><i class="ti ti-file-download"></i><span>${escHtml(msg.fileName||'File')}</span></a>`;
+  } else if (msg.type==='location' && msg.location) {
+    body = buildLocationBubble(msg, isMe);
   } else {
     body = escHtml(msg.content);
   }
@@ -275,6 +277,9 @@ function buildBubble(msg, isGroup) {
   const editedLabel = msg.edited ? `<span class="msg-edited">(diedit)</span>` : '';
 
   if (msg.type === 'voice' && msg.mediaUrl) {
+    wrap.innerHTML = `${senderLine}${body}
+      <div class="b-meta"><span class="b-time ${isMe?'me':'ot'}">${time}</span>${tick}</div>`;
+  } else if (msg.type === 'location') {
     wrap.innerHTML = `${senderLine}${body}
       <div class="b-meta"><span class="b-time ${isMe?'me':'ot'}">${time}</span>${tick}</div>`;
   } else {
@@ -399,6 +404,22 @@ async function sendMsg() {
     ? { content: txt, type: 'text' }
     : { receiverId: currentChat.id, content: txt, type: 'text' };
 
+  // Optimistic UI — tampilkan bubble sebelum server respond
+  const optimisticMsg = {
+    _id: null,
+    sender: currentUser,
+    content: txt,
+    type: 'text',
+    createdAt: new Date().toISOString(),
+    isRead: false
+  };
+  const area = document.getElementById('msgArea');
+  const bubble = buildBubble(optimisticMsg, isGroup);
+  bubble.classList.add('sending');
+  area.appendChild(bubble);
+  scrollBottom();
+  updatePreview(currentChat.id, txt, optimisticMsg.createdAt);
+
   try {
     const res = await fetch(url, {
       method: 'POST',
@@ -407,10 +428,14 @@ async function sendMsg() {
     });
     if (!res.ok) throw new Error('Gagal');
     const msg = await res.json();
-    document.getElementById('msgArea').appendChild(buildBubble(msg, isGroup));
-    scrollBottom();
-    updatePreview(currentChat.id, txt, msg.createdAt);
-  } catch { showToast('Gagal mengirim pesan'); }
+    // Update bubble dengan data asli dari server
+    bubble.dataset.msgId = msg._id;
+    bubble.classList.remove('sending');
+  } catch {
+    bubble.remove();
+    inp.value = txt;
+    showToast('Gagal mengirim pesan');
+  }
 }
 
 // ── File upload ──
@@ -532,6 +557,124 @@ async function sendVoice(blob, mime) {
 }
 
 // ══════════════════════════════════════
+//  LIVE LOCATION
+// ══════════════════════════════════════
+let _liveLocWatchId  = null;
+let _liveLocMsgId    = null;
+let _liveLocInterval = null;
+let _liveLocIsGroup  = false;
+let _liveLocChatId   = null;
+let _liveLocExpiry   = null;
+
+function buildLocationBubble(msg, isMe) {
+  const { lat, lng, live, expiresAt } = msg.location || {};
+  const mapsUrl = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}&zoom=15`;
+  const imgUrl  = `https://static-maps.yandex.ru/1.x/?lang=en-US&ll=${lng},${lat}&z=15&l=map&size=300,160&pt=${lng},${lat},pm2rdm`;
+  const liveTag = live ? `<div class="loc-live-tag" id="loc-live-${msg._id}">🔴 Live</div>` : '';
+  const stopBtn = (live && isMe) ? `<button class="loc-stop-btn" onclick="stopLiveLocation()">Berhenti berbagi</button>` : '';
+  return `<div class="loc-bubble ${isMe?'me':'other'}" data-loc-id="${msg._id}">
+    ${liveTag}
+    <a href="${mapsUrl}" target="_blank" rel="noopener">
+      <img class="loc-map-img" src="${imgUrl}" alt="Peta lokasi" onerror="this.src=''" id="loc-img-${msg._id}">
+    </a>
+    <div class="loc-coords" id="loc-coords-${msg._id}">📍 ${lat?.toFixed(5)}, ${lng?.toFixed(5)}</div>
+    <a class="loc-open-link" href="${mapsUrl}" target="_blank" rel="noopener">Buka di Maps</a>
+    ${stopBtn}
+  </div>`;
+}
+
+function updateLocationBubble(msgId, lat, lng) {
+  const imgEl    = document.getElementById(`loc-img-${msgId}`);
+  const coordEl  = document.getElementById(`loc-coords-${msgId}`);
+  const liveEl   = document.getElementById(`loc-live-${msgId}`);
+  const mapsUrl  = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}&zoom=15`;
+  const imgUrl   = `https://static-maps.yandex.ru/1.x/?lang=en-US&ll=${lng},${lat}&z=15&l=map&size=300,160&pt=${lng},${lat},pm2rdm`;
+  if (imgEl) { imgEl.src = imgUrl; imgEl.parentElement.href = mapsUrl; }
+  if (coordEl) coordEl.textContent = `📍 ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  const wrap = document.querySelector(`[data-msg-id="${msgId}"] .loc-bubble`);
+  if (wrap) wrap.querySelector('.loc-open-link').href = mapsUrl;
+}
+
+async function sendLocation(live) {
+  if (!currentChat) return;
+  if (!navigator.geolocation) return showToast('Geolokasi tidak didukung di browser ini');
+
+  showToast(live ? '🔄 Mendapatkan lokasi...' : '📍 Mendapatkan lokasi...');
+
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const { latitude: lat, longitude: lng } = pos.coords;
+    const isGroup = currentChat.type === 'group';
+    const url = isGroup ? `/api/groups/${currentChat.id}/location` : '/api/messages/location';
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { ...auth(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ receiverId: currentChat.id, lat, lng, live })
+      });
+      if (!res.ok) throw new Error('Gagal');
+      const msg = await res.json();
+
+      const area = document.getElementById('msgArea');
+      area.appendChild(buildBubble(msg, isGroup));
+      scrollBottom();
+      updatePreview(currentChat.id, live ? '📍 Lokasi live' : '📍 Lokasi', msg.createdAt);
+
+      if (live) {
+        _liveLocMsgId   = msg._id;
+        _liveLocIsGroup = isGroup;
+        _liveLocChatId  = currentChat.id;
+        _liveLocExpiry  = new Date(msg.location.expiresAt);
+        startLiveTracking();
+      }
+    } catch { showToast('Gagal mengirim lokasi'); }
+  }, () => showToast('Izin lokasi ditolak'), { enableHighAccuracy: true, timeout: 10000 });
+}
+
+function startLiveTracking() {
+  document.getElementById('liveLocBar').style.display = 'flex';
+  // Update setiap 5 detik
+  _liveLocWatchId = navigator.geolocation.watchPosition(pos => {
+    const { latitude: lat, longitude: lng } = pos.coords;
+    const url = _liveLocIsGroup
+      ? `/api/groups/${_liveLocChatId}/messages/${_liveLocMsgId}/location`
+      : `/api/messages/${_liveLocMsgId}/location`;
+    fetch(url, {
+      method: 'PATCH',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lat, lng })
+    }).catch(() => {});
+    // Update bubble sendiri juga (optimistic)
+    updateLocationBubble(_liveLocMsgId, lat, lng);
+  }, null, { enableHighAccuracy: true, maximumAge: 5000 });
+
+  // Auto stop saat expiry (15 menit)
+  const remaining = _liveLocExpiry ? _liveLocExpiry - Date.now() : 15 * 60 * 1000;
+  _liveLocInterval = setTimeout(() => stopLiveLocation(), remaining);
+}
+
+function stopLiveLocation() {
+  if (_liveLocWatchId != null) { navigator.geolocation.clearWatch(_liveLocWatchId); _liveLocWatchId = null; }
+  if (_liveLocInterval)        { clearTimeout(_liveLocInterval); _liveLocInterval = null; }
+  document.getElementById('liveLocBar').style.display = 'none';
+  // Hapus tag "live" dari bubble
+  const liveEl = document.getElementById(`loc-live-${_liveLocMsgId}`);
+  if (liveEl) liveEl.remove();
+  const stopBtn = document.querySelector(`[data-msg-id="${_liveLocMsgId}"] .loc-stop-btn`);
+  if (stopBtn) stopBtn.remove();
+  _liveLocMsgId = null;
+}
+
+function openLocationMenu() {
+  const menu = document.getElementById('locMenu');
+  menu.style.display = menu.style.display === 'none' ? 'flex' : 'none';
+}
+
+function closeLocationMenu() {
+  document.getElementById('locMenu').style.display = 'none';
+}
+
+// ══════════════════════════════════════
 //  SOCKET.IO
 // ══════════════════════════════════════
 function connectSocket() {
@@ -541,6 +684,10 @@ function connectSocket() {
     const myId    = (currentUser._id || currentUser.id)?.toString();
     const senderId = (msg.sender?._id || msg.sender)?.toString();
     const isCur   = currentChat?.type==='personal' && senderId === currentChat.id?.toString();
+    // Cek duplikat: kalau sudah ada bubble dengan _id ini, skip
+    if (msg._id && document.querySelector(`[data-msg-id="${msg._id}"]`)) {
+      return;
+    }
     if (isCur) {
       document.getElementById('msgArea').appendChild(buildBubble(msg, false));
       scrollBottom();
@@ -558,6 +705,10 @@ function connectSocket() {
     const sendId = (msg.sender?._id || msg.sender)?.toString();
     const gid    = (msg.groupId || msg.group)?.toString();
     const isCur  = currentChat?.type==='group' && currentChat.id?.toString() === gid;
+    // Cek duplikat
+    if (msg._id && document.querySelector(`[data-msg-id="${msg._id}"]`)) {
+      return;
+    }
     if (isCur) {
       if (msg.type === 'system') {
         document.getElementById('msgArea').innerHTML += systemMsg(msg.content);
@@ -643,6 +794,10 @@ function connectSocket() {
 
   socket.on('messages-read', () => {
     document.querySelectorAll('.mw.me .tick').forEach(el => el.classList.add('read'));
+  });
+
+  socket.on('location-update', ({ msgId, lat, lng }) => {
+    updateLocationBubble(msgId, lat, lng);
   });
 
   navigator.serviceWorker?.addEventListener('message', e => {
@@ -1190,6 +1345,7 @@ let _ctxMsgType = null;
 let _ctxMsgWrap = null;
 
 function showMsgContextMenu(e, msgId, msgType, wrap) {
+  if (!msgId || wrap.classList.contains('sending')) return;
   _ctxMsgId = msgId; _ctxMsgType = msgType; _ctxMsgWrap = wrap;
   const ctx = document.getElementById('msgCtx');
   document.getElementById('ctxEdit').style.display = msgType === 'text' ? '' : 'none';
@@ -1292,6 +1448,8 @@ document.addEventListener('click', e => {
     closeCreateGroupModal();
   if (!e.target.closest('.msg-ctx') && !e.target.closest('.mw'))
     document.getElementById('msgCtx')?.classList.remove('show');
+  if (!e.target.closest('.loc-menu-wrap'))
+    closeLocationMenu();
 });
 
 // ── Start ──

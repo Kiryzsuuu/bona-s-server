@@ -54,8 +54,10 @@ const app    = express();
 const server = http.createServer(app);
 const io     = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
-  transports: ['polling', 'websocket'],
-  allowEIO3: true
+  transports: ['websocket', 'polling'],
+  allowEIO3: true,
+  pingTimeout: 20000,
+  pingInterval: 25000
 });
 
 // Buat folder uploads hanya di lokal

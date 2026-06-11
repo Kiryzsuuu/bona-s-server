@@ -507,4 +507,65 @@ router.delete('/:id/messages/:msgId', auth, async (req, res) => {
   }
 });
 
+// POST /api/groups/:id/location — kirim lokasi ke grup
+router.post('/:id/location', auth, async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.id);
+    if (!group) return res.status(404).json({ message: 'Grup tidak ditemukan' });
+    const isMember = group.members.some(m => m.user.toString() === req.user._id.toString());
+    if (!isMember) return res.status(403).json({ message: 'Bukan anggota grup' });
+
+    const { lat, lng, live } = req.body;
+    if (lat == null || lng == null) return res.status(400).json({ message: 'lat, lng wajib' });
+
+    const expiresAt = live ? new Date(Date.now() + 15 * 60 * 1000) : null;
+    const msg = await new GroupMessage({
+      group: req.params.id,
+      sender: req.user._id,
+      content: live ? 'Lokasi live' : 'Lokasi',
+      type: 'location',
+      location: { lat, lng, live: !!live, expiresAt }
+    }).save();
+
+    await msg.populate('sender', 'name profilePicture');
+
+    const io = req.app.get('io');
+    io.to(`group:${req.params.id}`).emit('new-group-message', {
+      ...msg.toObject(), groupId: req.params.id
+    });
+
+    res.status(201).json(msg);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PATCH /api/groups/:id/messages/:msgId/location — update koordinat live location grup
+router.patch('/:id/messages/:msgId/location', auth, async (req, res) => {
+  try {
+    const { lat, lng } = req.body;
+    const msg = await GroupMessage.findById(req.params.msgId);
+    if (!msg) return res.status(404).json({ message: 'Pesan tidak ditemukan' });
+    if (msg.sender.toString() !== req.user._id.toString())
+      return res.status(403).json({ message: 'Bukan pesanmu' });
+    if (msg.type !== 'location' || !msg.location?.live)
+      return res.status(400).json({ message: 'Bukan live location' });
+    if (msg.location.expiresAt && new Date() > msg.location.expiresAt)
+      return res.status(410).json({ message: 'Live location sudah berakhir' });
+
+    msg.location.lat = lat;
+    msg.location.lng = lng;
+    await msg.save();
+
+    const io = req.app.get('io');
+    io.to(`group:${req.params.id}`).emit('location-update', {
+      msgId: msg._id, lat, lng, groupId: req.params.id
+    });
+
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;

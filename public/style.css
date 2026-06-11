@@ -243,6 +243,10 @@ body{
 .tick.me{color:rgba(255,255,255,.65);}
 .tick.read{color:#F7C5D0;}
 
+/* Optimistic — bubble sementara sebelum server konfirmasi */
+.mw.sending{opacity:.6;}
+.mw.sending .tick{display:none;}
+
 /* Media in bubbles */
 .msg-img{
   max-width:200px;max-height:160px;border-radius:10px;cursor:pointer;
@@ -390,6 +394,61 @@ body{
 
 /* File input hidden */
 #fileInput{display:none;}
+
+/* ── Location ── */
+.loc-menu-wrap{position:relative;flex-shrink:0;}
+.loc-btn{color:var(--text-muted);font-size:20px;cursor:pointer;transition:color .15s;}
+.loc-btn:hover{color:var(--rose);}
+.loc-menu{
+  position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);
+  background:var(--cream,#FDF8F5);border:1px solid var(--chip-border,#F0DCE2);
+  border-radius:14px;padding:6px;z-index:500;
+  box-shadow:0 6px 24px rgba(61,37,53,.14);min-width:210px;
+  flex-direction:column;gap:2px;
+}
+.loc-menu-item{
+  display:flex;align-items:center;gap:9px;padding:10px 13px;border-radius:10px;
+  font-size:13px;cursor:pointer;color:var(--text-main);transition:background .12s;
+  white-space:nowrap;
+}
+.loc-menu-item:hover{background:var(--rose-light,#F5E6EA);color:var(--rose);}
+.loc-menu-item i{font-size:17px;flex-shrink:0;}
+
+/* Location bubble */
+.loc-bubble{border-radius:16px;overflow:hidden;width:240px;cursor:default;}
+.loc-bubble.me{border-radius:16px 4px 16px 16px;}
+.loc-bubble.other{border-radius:4px 16px 16px 16px;border:1px solid #F0DCE2;}
+.loc-live-tag{
+  background:rgba(220,50,50,.12);color:#C03030;
+  font-size:11px;font-weight:600;padding:4px 10px;text-align:center;
+}
+.loc-map-img{width:100%;height:120px;object-fit:cover;display:block;}
+.loc-coords{
+  font-size:11.5px;padding:6px 10px 2px;
+  color:var(--text-muted);font-family:var(--font-mono);
+}
+.loc-open-link{
+  display:block;font-size:12px;padding:5px 10px 8px;color:var(--rose);
+  text-decoration:none;font-weight:500;
+}
+.loc-open-link:hover{text-decoration:underline;}
+.loc-stop-btn{
+  display:block;width:calc(100% - 20px);margin:0 10px 8px;
+  background:var(--rose);color:#fff;border:none;border-radius:20px;
+  padding:6px;font-size:12px;cursor:pointer;font-family:var(--font-text);
+}
+
+/* Live location top bar */
+.live-loc-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 18px;background:rgba(220,50,50,.08);border-top:1px solid rgba(220,50,50,.15);
+  font-size:12.5px;color:#C03030;gap:10px;
+}
+.live-loc-bar button{
+  background:rgba(220,50,50,.15);color:#C03030;border:none;border-radius:20px;
+  padding:4px 12px;font-size:12px;cursor:pointer;font-family:var(--font-text);
+  flex-shrink:0;
+}
 
 /* Scrollbar global */
 ::-webkit-scrollbar{width:4px;}

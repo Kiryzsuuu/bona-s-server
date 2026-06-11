@@ -194,10 +194,24 @@
         <div class="ep-grid" id="epGrid"></div>
       </div>
 
+      <!-- Live Location Bar (shown while sharing) -->
+      <div class="live-loc-bar" id="liveLocBar" style="display:none">
+        <span>🔴 Berbagi lokasi live...</span>
+        <button onclick="stopLiveLocation()">Berhenti</button>
+      </div>
+
       <!-- Input Bar -->
       <div class="input-bar" id="inputBar">
         <i class="ti ti-paperclip" title="Lampiran" onclick="document.getElementById('fileInput').click()"></i>
         <input type="file" id="fileInput" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" onchange="handleFileSelect(this)" style="display:none">
+        <!-- Location menu -->
+        <div class="loc-menu-wrap" id="locMenuWrap">
+          <i class="ti ti-map-pin loc-btn" title="Kirim lokasi" onclick="openLocationMenu()"></i>
+          <div class="loc-menu" id="locMenu" style="display:none">
+            <div class="loc-menu-item" onclick="sendLocation(false);closeLocationMenu()"><i class="ti ti-map-pin"></i> Kirim lokasi sekali</div>
+            <div class="loc-menu-item" onclick="sendLocation(true);closeLocationMenu()"><i class="ti ti-navigation"></i> Bagikan lokasi live (15 menit)</div>
+          </div>
+        </div>
         <div class="inp-wrap">
           <input class="chat-inp" id="chatInp" type="text" placeholder="Tulis pesan hangat..."
             onkeydown="onKey(event)" oninput="onTyping()">
